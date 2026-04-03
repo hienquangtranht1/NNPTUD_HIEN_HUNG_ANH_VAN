@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Task Manager</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 24px; }
+        .input-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; color: #555; font-size: 14px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .message { margin-top: 16px; text-align: center; font-size: 14px; color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>Đăng Nhập Hệ Thống</h2>
+    <div class="input-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" placeholder="Nhập username">
+    </div>
+    <div class="input-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" placeholder="Nhập mật khẩu">
+    </div>
+    <button onclick="login()">Đăng Nhập</button>
+    <div id="msg" class="message"></div>
+</div>
+
+<script>
+    async function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const msgDiv = document.getElementById('msg');
+        msgDiv.className = "message";
+        msgDiv.innerText = "Đang xử lý...";
+
+        try {
+            const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                msgDiv.className = "message success";
+                msgDiv.innerText = "Đăng nhập thành công! Token: " + data.token.substring(0, 15) + "...";
+                // Lưu token vào localStorage để dùng gọi các API khác
+                localStorage.setItem('auth_token', data.token);
+            } else {
+                msgDiv.innerText = data.message || data || "Lỗi đăng nhập";
+            }
+        } catch (error) {
+            msgDiv.innerText = "Không thể kết nối Backend. Hãy chắc chắn đã chạy npm start";
+        }
+    }
+</script>
+
+</body>
+</html>
