@@ -27,26 +27,26 @@ app.use(express.static(path.join(__dirname, 'resources'))); // Phục vụ các 
 app.use('/', indexRouter);
 
 // === HIỂN phụ trách ===
-app.use('/api/v1/auth',          require('./routes/auth'));
-app.use('/api/v1/users',         require('./routes/users'));
-app.use('/api/v1/roles',         require('./routes/roles'));
-app.use('/api/v1/departments',   require('./routes/departments'));
+app.use('/api/v1/auth', require('./routes/auth'));
+app.use('/api/v1/users', require('./routes/users'));
+app.use('/api/v1/roles', require('./routes/roles'));
+app.use('/api/v1/departments', require('./routes/departments'));
 
 // === HƯNG phụ trách ===
-app.use('/api/v1/projects',      require('./routes/projects'));
-app.use('/api/v1/categories',    require('./routes/categories'));
-app.use('/api/v1/milestones',    require('./routes/milestones'));
+app.use('/api/v1/projects', require('./routes/projects'));
+app.use('/api/v1/categories', require('./routes/categories'));
+app.use('/api/v1/milestones', require('./routes/milestones'));
 
 // === ANH phụ trách ===
-app.use('/api/v1/tasks',         require('./routes/tasks'));
-app.use('/api/v1/tags',          require('./routes/tags'));
+app.use('/api/v1/tasks', require('./routes/tasks'));
+app.use('/api/v1/tags', require('./routes/tags'));
 app.use('/api/v1/taskHistories', require('./routes/taskHistories'));
 
 // === VÂN phụ trách ===
-app.use('/api/v1/comments',      require('./routes/comments'));
-app.use('/api/v1/attachments',   require('./routes/attachments'));
+app.use('/api/v1/comments', require('./routes/comments'));
+app.use('/api/v1/attachments', require('./routes/attachments'));
 app.use('/api/v1/notifications', require('./routes/notifications'));
-app.use('/api/v1/upload',        require('./routes/uploads'));
+app.use('/api/v1/upload', require('./routes/uploads'));
 
 // =====================================================
 // KẾT NỐI MONGODB — Database: QLTASK
