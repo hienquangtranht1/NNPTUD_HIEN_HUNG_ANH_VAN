@@ -4,7 +4,8 @@ let bcrypt = require('bcrypt');
 module.exports = {
   CreateAnUser: async function (username, password, email, role, session, fullName, avatarUrl) {
     let newUser = new userModel({ username, password, email, role, fullName: fullName || '', avatarUrl: avatarUrl || '' });
-    await newUser.save({ session });
+    if (session) await newUser.save({ session });
+    else await newUser.save();
     return newUser;
   },
   FindUserByUsername: async function (username) {
