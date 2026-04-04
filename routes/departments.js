@@ -14,6 +14,24 @@ router.get('/', async function (req, res, next) {
   res.send(data);
 });
 
+// GET /api/v1/departments/:id — Xem chi tiết phòng và danh sách nhân sự
+router.get('/:id', async function (req, res, next) {
+  try {
+    let department = await departmentModel.findOne({ _id: req.params.id, isDeleted: false });
+    if (!department) return res.status(404).send({ message: 'Không tìm thấy phòng ban' });
+
+    let userModel = require('../schemas/users');
+    let users = await userModel.find({ department: department._id, isDeleted: false }).select('fullName username email avatarUrl role');
+
+    let result = department.toObject();
+    result.users = users;
+
+    res.send(result);
+  } catch (err) {
+    res.status(400).send({ message: 'ID không hợp lệ' });
+  }
+});
+
 // POST /api/v1/departments — Tạo phòng ban mới
 router.post('/', CheckLogin, CheckRole('ADMIN'), async function (req, res, next) {
   try {
