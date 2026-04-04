@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — QLTASK Premium</title>
+  <style>
+    :root {
+      --bg: #ffffff; --fg: #000000; --border: #e5e5e5; --radius: 8px;
+      --accent: #000000; --danger: #ff4d4f; --success: #52c41a; --muted: #8c8c8c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #fafafa; color: var(--fg); line-height: 1.5; }
+
+    /* Layout */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #fff; border-right: 1px solid var(--border); padding: 24px; position: sticky; top: 0; height: 100vh; }
+    .main { flex: 1; padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+    /* UI Elements */
+    .navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .brand { font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; }
+    .nav-btn { background: #000; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+    .nav-btn:hover { opacity: 0.8; }
+    .nav-btn.ghost { background: transparent; color: #000; border: 1px solid var(--border); }
+
+    .sidebar-item { padding: 12px 16px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; font-weight: 500; transition: 0.2s; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+    .sidebar-item:hover { background: #f5f5f5; color: #000; }
+    .sidebar-item.active { background: #000; color: #fff; }
+
+    /* Kanban */
+    .kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; min-width: 1000px; }
+    .kb-col { background: #f9f9f9; border-radius: var(--radius); min-height: 600px; display: flex; flex-direction: column; border: 1px solid var(--border); }
+    .kb-header { padding: 16px; border-bottom: 2px solid #000; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+    .kb-count { background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+    .kb-list { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .kb-list.drag-over { background: #f0f0f0; outline: 2px dashed #ccc; outline-offset: -8px; }
+
+    /* Cards */
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 16px; transition: 0.2s; cursor: pointer; position: relative; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    .card h4 { font-size: 0.95rem; margin-bottom: 8px; font-weight: 700; }
+    .card .meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 12px; }
+    .card .actions { display: flex; gap: 8px; border-top: 1px solid #f0f0f0; padding-top: 12px; margin-top: 12px; }
+    
+    .project-card { position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; cursor: pointer; }
+    .proj-img { width: 100%; height: 140px; background: #eee; object-fit: cover; }
+    .proj-body { padding: 16px; }
+
+    /* Badges */
+    .badge { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+    .bg-todo { background: #f0f0f0; color: #666; }
+    .bg-in_progress { background: #e6f7ff; color: #1890ff; }
+    .bg-in_review { background: #fff7e6; color: #fa8c16; }
+    .bg-done { background: #f6ffed; color: #52c41a; }
+
+    /* Modals */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: #fff; width: 500px; max-width: 95%; border-radius: 12px; padding: 32px; position: relative; }
+    .modal h3 { margin-bottom: 20px; font-weight: 800; border-bottom: 2px solid #000; padding-bottom: 10px; }
+    .modal-close { position: absolute; right: 24px; top: 24px; cursor: pointer; font-size: 1.2rem; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+    input:focus { outline: 2px solid #000; }
+    
+    .hidden { display: none !important; }
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Admin Styles */
+    .admin-only { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand" style="margin-bottom: 40px;">QLTASK</div>
+    <div class="sidebar-item active" onclick="showSection('projects', this)">🚀 Dự án</div>
+    <div class="sidebar-item admin-only" onclick="showSection('users', this)">👥 Thành viên</div>
+    <div class="sidebar-item" onclick="showSection('milestones', this)">🎯 Cột mốc</div>
+    <div class="sidebar-item admin-only" onclick="showSection('categories', this)">🏷️ Danh mục</div>
+    <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+      <div id="userDisplay" style="font-weight: 700; font-size: 0.9rem; margin-bottom: 10px;">User</div>
+      <button class="nav-btn ghost" style="width: 100%;" onclick="logout()">Thoát</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="navbar">
+      <h2 id="sectionTitle">🚀 Dự án</h2>
+      <button class="nav-btn admin-only" id="createBtn" onclick="openCreate()">+ Tạo mới</button>
+    </header>
+
+    <div id="msg"></div>
+
+    <!-- Section: Projects (Kanban) -->
+    <section id="sec-projects" class="section active">
+      <div class="kanban">
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropPrj(event,'PLANNING')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Lên kế hoạch</span> <span class="kb-count" id="cnt-p-PLANNING">0</span></div>
+          <div class="kb-list" id="list-p-PLANNING"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropPrj(event,'IN_PROGRESS')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Đang chạy</span> <span class="kb-count" id="cnt-p-IN_PROGRESS">0</span></div>
+          <div class="kb-list" id="list-p-IN_PROGRESS"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropPrj(event,'ON_HOLD')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Tạm dừng</span> <span class="kb-count" id="cnt-p-ON_HOLD">0</span></div>
+          <div class="kb-list" id="list-p-ON_HOLD"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropPrj(event,'COMPLETED')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Hoàn tất</span> <span class="kb-count" id="cnt-p-COMPLETED">0</span></div>
+          <div class="kb-list" id="list-p-COMPLETED"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropPrj(event,'CANCELLED')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Đã hủy</span> <span class="kb-count" id="cnt-p-CANCELLED">0</span></div>
+          <div class="kb-list" id="list-p-CANCELLED"></div>
+        </div>
+      </div>
+    </section>
+
+    </section>
+
+    <!-- Section: Users -->
+    <section id="sec-users" class="section">
+      <div id="user-list-area"></div>
+    </section>
+
+    <!-- Section: Milestones (Kanban) -->
+    <section id="sec-milestones" class="section">
+      <div class="kanban">
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropMs(event,'PENDING')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Chưa chạy</span> <span class="kb-count" id="cnt-m-PENDING">0</span></div>
+          <div class="kb-list" id="list-m-PENDING"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropMs(event,'IN_PROGRESS')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Đang làm</span> <span class="kb-count" id="cnt-m-IN_PROGRESS">0</span></div>
+          <div class="kb-list" id="list-m-IN_PROGRESS"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropMs(event,'COMPLETED')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Đã xong</span> <span class="kb-count" id="cnt-m-COMPLETED">0</span></div>
+          <div class="kb-list" id="list-m-COMPLETED"></div>
+        </div>
+        <div class="kb-col" ondragover="allowDrop(event)" ondrop="dropMs(event,'OVERDUE')" ondragenter="dEnter(event)" ondragleave="dLeave(event)">
+          <div class="kb-header"><span>Quá hạn</span> <span class="kb-count" id="cnt-m-OVERDUE">0</span></div>
+          <div class="kb-list" id="list-m-OVERDUE"></div>
+        </div>
+      </div>
+    </section>
+    <!-- Section: Categories -->
+    <section id="sec-categories" class="section">
+      <div id="category-list-area" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <h3 id="modalTitle">Thao tác</h3>
+    <div id="modalBody">
+      <!-- Dynamic Form -->
+    </div>
+    <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+      <button class="nav-btn ghost" onclick="closeModal()">Hủy</button>
+      <button class="nav-btn" id="modalSubmit" onclick="handleSubmit()">Lưu lại</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api/v1';
+  let token = localStorage.getItem('token');
+  let currentSection = 'projects';
+  let currentUser = null;
+  let editId = null;
+
+  if (!token) window.location.href = 'index.html';
+
+  function H() { return { 'Authorization': `Bearer ${token}` }; }
+  
+  function getPath(type) { 
+      if (type === 'category') return 'categories';
+      if (type === 'user') return 'users';
+      return type + 's'; // projects, milestones
+  }
+
+  async function loadMe() {
+    try {
+      let res = await fetch(`${API}/auth/me`, { headers: H() });
+      if (res.status === 401) logout();
+      currentUser = await res.json();
+      document.getElementById('userDisplay').innerText = currentUser.fullName || currentUser.username;
+      
+      const isManager = ['ADMIN', 'MANAGER'].includes(currentUser.role?.name);
+      if (isManager) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    } catch(e) { logout(); }
+  }
+  loadMe();
+
+  function logout() { localStorage.removeItem('token'); window.location.href = 'index.html'; }
+
+  function showSection(name, el) {
+    currentSection = name;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`sec-${name}`).classList.add('active');
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+    
+    document.getElementById('sectionTitle').innerText = 
+      {projects:'🚀 Dự án', users:'👥 Thành viên', milestones:'🎯 Cột mốc', categories:'🏷️ Danh mục'}[name];
+    
+    if (name === 'projects') loadProjects();
+    if (name === 'users') loadUsers();
+    if (name === 'milestones') loadMilestones();
+    if (name === 'categories') loadCategories();
+  }
+
+  // --- LOADER LOGIC ---
+
+  async function loadProjects() {
+    const statuses = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED'];
+    statuses.forEach(s => {
+      const list = document.getElementById(`list-p-${s}`);
+      if (list) list.innerHTML = '';
+      const cnt = document.getElementById(`cnt-p-${s}`);
+      if (cnt) cnt.innerText = '0';
+    });
+
+    console.log('--- DEBUG LOAD PROJECTS ---');
+    console.log('CurrentUser Role:', currentUser?.role);
+
+    try {
+      const res = await fetch(`${API}/projects`, { headers: H() });
+      if (!res.ok) throw new Error(`Server trả về lỗi ${res.status}`);
+      
+      const result = await res.json();
+      console.log('Full Projects API Response:', result);
+      
+      const data = (result && result.data) ? result.data : (Array.isArray(result) ? result : []);
+      
+      if (data.length === 0) {
+          console.warn('API Trả về mảng rỗng [] cho tài khoản này.');
+          statuses.forEach(s => { document.getElementById(`list-p-${s}`).innerHTML = '<div style="font-size:0.7rem;color:#ccc;padding:10px">Rỗng (API trả về 0 kết quả)</div>'; });
+      }
+
+      data.forEach(p => {
+        let statusKey = p.status || 'PLANNING';
+        const list = document.getElementById(`list-p-${statusKey}`);
+        if (!list) return;
+        
+        list.innerHTML = list.innerHTML.replace('<div style="font-size:0.7rem;color:#ccc;padding:10px">Rỗng (API trả về 0 kết quả)</div>', '');
+
+        const roleName = currentUser.role?.name || currentUser.role;
+        const isManager = ['ADMIN', 'MANAGER'].includes(roleName);
+        const isAdmin = roleName === 'ADMIN';
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.style.marginBottom = '12px';
+        card.draggable = isManager;
+        card.onclick = () => openView('project', p._id);
+        if (isManager) card.ondragstart = (e) => e.dataTransfer.setData("textPrj", p._id);
+
+        card.innerHTML = `
+          <img src="${p.thumbnail || 'https://via.placeholder.com/400x200?text=PROJECT'}" class="proj-img" style="height:100px">
+          <div class="proj-body" style="padding:10px">
+            <h4 style="font-size:0.85rem;margin:0">${p.name}</h4>
+            ${isManager ? `
+              <div style="margin-top:8px; display:flex; gap:6px">
+                <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;" onclick="event.stopPropagation(); openEdit('project','${p._id}')">✏️</button>
+                ${isAdmin?'<button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete(\'project\',\''+p._id+'\')">🗑️</button>':''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      statuses.forEach(s => {
+        const list = document.getElementById(`list-p-${s}`);
+        const cnt = document.getElementById(`cnt-p-${s}`);
+        if (list && cnt) cnt.innerText = list.children.length;
+      });
+    } catch(e) { console.error('Lỗi tải dự án', e); }
+  }
+
+  async function loadTasks() {
+    const statuses = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
+    statuses.forEach(s => {
+      document.getElementById(`list-${s}`).innerHTML = '';
+      document.getElementById(`cnt-${s}`).innerText = '0';
+    });
+
+    try {
+      const res = await fetch(`${API}/tasks`, { headers: H() });
+      const { data } = await res.json();
+      
+      data.forEach(t => {
+        const list = document.getElementById(`list-${t.status}`);
+        if (!list) return;
+
+        const isManager = ['ADMIN', 'MANAGER'].includes(currentUser.role?.name);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = isManager;
+        card.id = `task-${t._id}`;
+        card.onclick = () => openView('task', t._id);
+        if (isManager) card.ondragstart = (e) => e.dataTransfer.setData("text", t._id);
+
+        card.innerHTML = `
+          <h4>${t.title}</h4>
+          <div class="meta">🚀 ${t.project?.name || 'N/A'}</div>
+          ${isManager ? `<div class="actions"><button class="nav-btn ghost" style="padding:2px 8px;font-size:0.7rem;" onclick="event.stopPropagation(); openEdit('task','${t._id}')">✏️ Sửa</button></div>` : ''}
+        `;
+        list.appendChild(card);
+      });
+
+      statuses.forEach(s => {
+        document.getElementById(`cnt-${s}`).innerText = document.getElementById(`list-${s}`).children.length;
+      });
+    } catch(e) { console.error('Lỗi tải task'); }
+  }
+
+  async function loadUsers() {
+    const area = document.getElementById('user-list-area');
+    area.innerHTML = 'Đang tải...';
+    try {
+      const res = await fetch(`${API}/users`, { headers: H() });
+      const users = await res.json();
+      const isAdmin = currentUser.role?.name === 'ADMIN';
+
+      area.innerHTML = users.map(u => {
+        const isLocked = u.lockTime && new Date(u.lockTime) > new Date();
+        const statusBadge = isLocked 
+          ? '<span class="badge" style="background:#ff4d4f;color:#fff">BỊ KHÓA</span>' 
+          : '<span class="badge" style="background:#52c41a;color:#fff">ACTIVE</span>';
+
+        return `
+          <div class="sidebar-item" style="color:#000; background:#fff; border:1px solid #eee; margin-bottom:12px; cursor:default; align-items: flex-start; padding: 16px;">
+            <div style="width:40px;height:40px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-right:12px">${(u.fullName||u.username).charAt(0)}</div>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:1rem">${u.fullName || u.username} ${statusBadge}</div>
+              <div style="font-size:0.8rem;color:#888;margin:4px 0">${u.email} | ID: ${u.username}</div>
+              <div style="font-size:0.75rem;font-weight:700">VAI TRÒ: ${u.role?.name || 'N/A'}</div>
+              
+              ${isAdmin ? `
+                <div style="margin-top:12px; display:flex; gap:8px">
+                  <button class="nav-btn ghost" style="padding:4px 10px;font-size:0.75rem;" onclick="openEdit('user','${u._id}')">✏️ Sửa</button>
+                  <button class="nav-btn" style="padding:4px 10px;font-size:0.75rem; background:${isLocked?'#52c41a':'#ff4d4f'};" onclick="toggleLock('${u._id}', ${isLocked})">
+                    ${isLocked ? '🔓 Mở khóa' : '🔒 Khóa'}
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') || '<i>Chưa có thành viên</i>';
+    } catch(e) { area.innerHTML = 'Lỗi tải thành viên'; }
+  }
+
+  async function toggleLock(id, currentlyLocked) {
+    if (!confirm(currentlyLocked ? 'Bạn muốn mở khóa tài khoản này?' : 'Bạn chắc chắn muốn KHÓA tài khoản này?')) return;
+    try {
+      const res = await fetch(`${API}/users/${id}`, {
+        method: 'PUT',
+        headers: { ...H(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: currentlyLocked ? 'active' : 'locked' })
+      });
+      if (res.ok) {
+          alert('Cập nhật trạng thái thành công!');
+          loadUsers();
+      }
+    } catch(e) { alert('Lỗi kết nối'); }
+  }
+
+  async function loadMilestones() {
+    const statuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE'];
+    statuses.forEach(s => {
+      const list = document.getElementById(`list-m-${s}`);
+      if (list) list.innerHTML = '';
+      const cnt = document.getElementById(`cnt-m-${s}`);
+      if (cnt) cnt.innerText = '0';
+    });
+
+    try {
+      const res = await fetch(`${API}/milestones`, { headers: H() });
+      const result = await res.json();
+      console.log('Milestones Data:', result); // Log debug
+      
+      const milestones = Array.isArray(result) ? result : (result.data || []);
+
+      if (milestones.length === 0) {
+          statuses.forEach(s => { document.getElementById(`list-m-${s}`).innerHTML = '<div style="font-size:0.7rem;color:#ccc;padding:10px">Rỗng</div>'; });
+      }
+
+      milestones.forEach(m => {
+        let statusKey = m.status || 'PENDING';
+        const list = document.getElementById(`list-m-${statusKey}`);
+        if (!list) return;
+        
+        list.innerHTML = list.innerHTML.replace('<div style="font-size:0.7rem;color:#ccc;padding:10px">Rỗng</div>', '');
+
+        const isManager = ['ADMIN', 'MANAGER'].includes(currentUser.role?.name);
+        const isAdmin = currentUser.role?.name === 'ADMIN';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = isManager;
+        card.onclick = () => openView('milestone', m._id);
+        if (isManager) card.ondragstart = (e) => e.dataTransfer.setData("textMs", m._id);
+
+        card.innerHTML = `
+          <h4 style="font-size:0.85rem">${m.name}</h4>
+          <div class="meta" style="font-size:0.65rem">🚀 ${m.project?.name || 'N/A'}</div>
+          ${isManager ? `
+            <div style="margin-top:8px; display:flex; gap:6px">
+              <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;" onclick="event.stopPropagation(); openEdit('milestone','${m._id}')">✏️</button>
+              ${isAdmin?'<button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete(\'milestone\',\''+m._id+'\')">🗑️</button>':''}
+            </div>
+          ` : ''}
+        `;
+        list.appendChild(card);
+      });
+
+      statuses.forEach(s => {
+        const list = document.getElementById(`list-m-${s}`);
+        const cnt = document.getElementById(`cnt-m-${s}`);
+        if (list && cnt) cnt.innerText = list.children.length;
+      });
+    } catch(e) { console.error('Lỗi tải cột mốc', e); }
+  }
+
+  async function loadCategories() {
+    const area = document.getElementById('category-list-area');
+    area.innerHTML = 'Đang tải...';
+    try {
+      const res = await fetch(`${API}/categories`, { headers: H() });
+      const cats = await res.json();
+      const isManager = ['ADMIN', 'MANAGER'].includes(currentUser.role?.name);
+      const isAdmin = currentUser.role?.name === 'ADMIN';
+
+      area.innerHTML = cats.map(c => `
+        <div class="card" style="border-left: 6px solid ${c.color || '#000'};">
+          <div style="font-weight:800;font-size:0.9rem">${c.name}</div>
+          <div style="font-size:0.7rem;color:#888;margin-top:4px">Màu: ${c.color || '#000'}</div>
+          ${isManager ? `
+            <div style="margin-top:12px; display:flex; gap:6px">
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;" onclick="openEdit('category','${c._id}')">✏️ Sửa</button>
+              ${isAdmin?'<button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;color:#ff4d4f" onclick="handleDelete(\'category\',\''+c._id+'\')">🗑️ Xóa</button>':''}
+            </div>
+          ` : ''}
+        </div>
+      `).join('') || '<i>Chưa có danh mục</i>';
+    } catch(e) { area.innerHTML = 'Lỗi tải danh mục'; }
+  }
+
+  // Kanban Handlers Extension
+  async function dropPrj(e, status) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const id = e.dataTransfer.getData("textPrj");
+    if (!id) return;
+    try {
+      await fetch(`${API}/projects/${id}`, {
+        method: 'PUT',
+        headers: { ...H(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadProjects();
+    } catch(e) { alert('Lỗi cập nhật dự án'); }
+  }
+
+  async function dropMs(e, status) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const id = e.dataTransfer.getData("textMs");
+    if (!id) return;
+    try {
+      await fetch(`${API}/milestones/${id}`, {
+        method: 'PUT',
+        headers: { ...H(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadMilestones();
+    } catch(e) { alert('Lỗi cập nhật cột mốc'); }
+  }
+
+  // Kanban Handlers
+  function allowDrop(e) { e.preventDefault(); }
+  function dEnter(e) { e.currentTarget.classList.add('drag-over'); }
+  function dLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+  async function drop(e, status) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const id = e.dataTransfer.getData("text");
+    try {
+      const res = await fetch(`${API}/tasks/${id}`, {
+        method: 'PUT',
+        headers: { ...H(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) loadTasks();
+    } catch(e) { alert('Lỗi kết nối'); }
+  }
+
+  // --- MODAL & FORMS ---
+  const forms = {
+    project: (data) => `
+      <div class="form-group"><label>Tên dự án *</label><input id="f_name" value="${data?.name||''}"></div>
+      <div class="form-group"><label>Mô tả</label><textarea id="f_desc">${data?.description||''}</textarea></div>
+      <div class="form-group"><label>Trạng thái</label><select id="f_status">${['PLANNING','IN_PROGRESS','ON_HOLD','COMPLETED','CANCELLED'].map(s=>`<option ${data?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group">
+        <label>Ảnh thumbnail</label>
+        ${data?.thumbnail ? `<img src="${data.thumbnail}" style="width:60px;height:40px;object-fit:cover;display:block;margin-bottom:8px;border:1px solid #ddd">` : ''}
+        <input type="file" id="f_image" accept="image/*">
+      </div>`,
+    milestone: (data, projs=[]) => `
+      <div class="form-group"><label>Tên cột mốc *</label><input id="f_name" value="${data?.name||''}"></div>
+      <div class="form-group"><label>Dự án *</label>
+        <select id="f_project">${projs.map(p=>`<option value="${p._id}" ${data?.project?._id===p._id?'selected':''}>${p.name}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Hạn chót</label><input type="date" id="f_dueDate" value="${data?.dueDate ? new Date(data.dueDate).toISOString().split('T')[0] : ''}"></div>
+      <div class="form-group"><label>Trạng thái</label><select id="f_status">${['PENDING','IN_PROGRESS','COMPLETED','OVERDUE'].map(s=>`<option ${data?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`,
+    task: (data, projs=[]) => `
+      <div class="form-group"><label>Tiêu đề công việc *</label><input id="f_title" value="${data?.title||''}"></div>
+      <div class="form-group"><label>Dự án *</label><select id="f_project">${projs.map(p=>`<option value="${p._id}" ${data?.project?._id===p._id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Trạng thái</label><select id="f_status">${['TODO','IN_PROGRESS','IN_REVIEW','DONE'].map(s=>`<option ${data?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Mô tả</label><textarea id="f_desc">${data?.description||''}</textarea></div>`,
+    user: (data, roles=[]) => `
+      <div class="form-group"><label>Tên đầy đủ *</label><input id="f_fullName" value="${data?.fullName||''}"></div>
+      <div class="form-group"><label>Email *</label><input id="f_email" value="${data?.email||''}"></div>
+      <div class="form-group"><label>Vai trò</label>
+        <select id="f_role">${roles.map(r=>`<option value="${r._id}" ${data?.role?._id===r._id?'selected':''}>${r.name}</option>`).join('')}</select>
+      </div>`,
+    category: (data) => {
+      const presets = ['#000000', '#52c41a', '#1890ff', '#f5222d', '#722ed1', '#faad14'];
+      return `
+        <div class="form-group"><label>Tên danh mục *</label><input id="f_name" value="${data?.name||''}"></div>
+        <div class="form-group"><label>Màu sắc đặc trưng</label>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            ${presets.map(c => `<div onclick="document.getElementById('f_color').value='${c}'" style="width:24px;height:24px;background:${c};cursor:pointer;border-radius:4px;border:1px solid #ddd"></div>`).join('')}
+          </div>
+          <input type="color" id="f_color" value="${data?.color||'#000000'}" style="width:100%;height:40px;cursor:pointer">
+        </div>`;
+    }
+  };
+
+  function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; editId = null; }
+
+  function getSingular(plural) {
+      if (plural === 'categories') return 'category';
+      return plural.slice(0, -1);
+  }
+
+  async function openCreate() {
+    const type = getSingular(currentSection);
+    if (!forms[type]) return alert('Chức năng đang phát triển');
+    
+    editId = null;
+    document.getElementById('modalSubmit').style.display = 'block';
+    document.getElementById('modalTitle').innerText = 'Tạo mới ' + type;
+    
+    let projs = [];
+    if (type === 'task' || type === 'milestone') {
+        const res = await fetch(`${API}/projects`, { headers: H() });
+        const d = await res.json();
+        projs = d.data || [];
+    }
+    
+    document.getElementById('modalBody').innerHTML = forms[type](null, projs);
+    document.getElementById('modalOverlay').style.display = 'flex';
+  }
+
+  async function openEdit(type, id) {
+    editId = id;
+    document.getElementById('modalSubmit').style.display = 'block';
+    document.getElementById('modalTitle').innerText = 'Chỉnh sửa ' + type;
+    
+    try {
+      const res = await fetch(`${API}/${getPath(type)}/${id}`, { headers: H() });
+      const data = await res.json();
+      
+      let extra = [];
+      if (type === 'task' || type === 'milestone') {
+          const r = await fetch(`${API}/projects`, { headers: H() });
+          const d = await r.json();
+          extra = d.data || [];
+      } else if (type === 'user') {
+          const r = await fetch(`${API}/roles`, { headers: H() });
+          extra = await r.json();
+      }
+      
+      document.getElementById('modalBody').innerHTML = forms[type](data, extra);
+      document.getElementById('modalOverlay').style.display = 'flex';
+    } catch(e) { alert('Lỗi tải dữ liệu sửa'); }
+  }
+
+  async function handleDelete(type, id) {
+    if (!confirm(`Bạn chắc chắn muốn XÓA ${type} này?`)) return;
+    try {
+      const res = await fetch(`${API}/${getPath(type)}/${id}`, { method: 'DELETE', headers: H() });
+      if (res.ok) {
+          showSection(currentSection);
+      } else {
+          const err = await res.json();
+          alert(err.message || 'Lỗi khi xóa');
+      }
+    } catch(e) { alert('Lỗi kết nối'); }
+  }
+
+  async function handleSubmit() {
+    const type = getSingular(currentSection);
+    const fd = new FormData();
+    
+    if (type === 'project') {
+        fd.append('name', document.getElementById('f_name').value);
+        fd.append('description', document.getElementById('f_desc').value);
+        fd.append('status', document.getElementById('f_status').value);
+    } else if (type === 'task') {
+        fd.append('title', document.getElementById('f_title').value);
+        fd.append('project', document.getElementById('f_project').value);
+        fd.append('status', document.getElementById('f_status').value);
+        fd.append('description', document.getElementById('f_desc').value);
+    } else if (type === 'user') {
+        fd.append('fullName', document.getElementById('f_fullName').value);
+        fd.append('email', document.getElementById('f_email').value);
+        fd.append('role', document.getElementById('f_role').value);
+    } else if (type === 'category') {
+        fd.append('name', document.getElementById('f_name').value);
+        fd.append('color', document.getElementById('f_color').value);
+    } else if (type === 'milestone') {
+        fd.append('name', document.getElementById('f_name').value);
+        fd.append('project', document.getElementById('f_project').value);
+        fd.append('dueDate', document.getElementById('f_dueDate').value);
+        fd.append('status', document.getElementById('f_status').value);
+    }
+
+    const fileEl = document.getElementById('f_image');
+    if (fileEl && fileEl.files[0]) fd.append('image', fileEl.files[0]);
+
+    const url = `${API}/${getPath(type)}${editId ? '/'+editId : ''}`;
+    const method = editId ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, { method, headers: H(), body: fd });
+      if (res.ok) {
+          closeModal();
+          showSection(currentSection);
+      } else {
+          const err = await res.json();
+          alert(err.message || 'Lỗi lưu dữ liệu');
+      }
+    } catch(e) { alert('Lỗi kết nối'); }
+  }
+
+  async function openView(type, id) {
+    const overlay = document.getElementById('modalOverlay');
+    const body = document.getElementById('modalBody');
+    const title = document.getElementById('modalTitle');
+    const submit = document.getElementById('modalSubmit');
+    
+    overlay.style.display = 'flex';
+    title.innerText = 'Chi tiết ' + type;
+    submit.style.display = 'none'; 
+    body.innerHTML = 'Đang tải...';
+
+    try {
+      const res = await fetch(`${API}/${getPath(type)}/${id}`, { headers: H() });
+      const data = await res.json();
+      
+      let html = '<div style="font-size:0.9rem">';
+      for (let k in data) {
+        if (['isDeleted','createdAt','updatedAt','__v','thumbnail'].includes(k)) continue;
+        let val = data[k];
+        if (typeof val === 'object' && val) val = val.name || val.username || val.fullName || JSON.stringify(val);
+        html += `<div style="margin-bottom:10px"><strong>${k.toUpperCase()}:</strong><br>${val || '—'}</div>`;
+      }
+      if (data.thumbnail) html += `<div><strong>THUMBNAIL:</strong><br><img src="${data.thumbnail}" style="width:100%;max-height:150px;object-fit:contain;margin-top:10px;border:1px solid #eee"></div>`;
+      html += '</div>';
+      body.innerHTML = html;
+    } catch(e) { body.innerHTML = 'Lỗi tải chi tiết'; }
+  }
+
+  window.onload = async () => {
+      await loadMe();
+      showSection('projects');
+  };
+</script>
+
+</body>
+</html>
