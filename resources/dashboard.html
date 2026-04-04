@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - QLTASK</title>
+  <link rel="stylesheet" href="stylesheets/style.css">
+</head>
+<body>
+
+<div class="navbar">
+  <h2>🗂️ QLTASK Dashboard</h2>
+  <div>
+    <span id="userInfo" style="margin-right: 15px; color: #f1c40f;"></span>
+    <a href="#" onclick="logout()">Đăng xuất</a>
+  </div>
+</div>
+
+<div class="container">
+  <div id="msg"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Dự án / Danh mục (HƯNG)</h3>
+      <button onclick="fetchProjects()">Tải Dự án Active</button>
+      <button onclick="fetchCategories()">Tải Danh mục</button>
+      <div id="projects-list" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Công việc (ANH)</h3>
+      <button class="success" onclick="fetchTasks()">Tải Công việc</button>
+      <div id="tasks-list" style="margin-top: 15px;"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3>Quản lý User (Chỉ Admin) (HIỂN)</h3>
+    <button class="danger" onclick="fetchUsers()">Tải danh sách Users</button>
+    <table id="users-table" style="margin-top: 15px; display: none;">
+      <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api/v1';
+  let token = localStorage.getItem('token');
+  
+  if (!token) {
+    window.location.href = 'index.html';
+  }
+
+  // Load User Info
+  async function loadMe() {
+    try {
+      let res = await fetch(`${API}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) { logout(); return; }
+      let user = await res.json();
+      document.getElementById('userInfo').innerText = `Xin chào, ${user.fullName || user.username}!`;
+    } catch(e) { console.error('Lỗi lấy user auth'); }
+  }
+  loadMe();
+
+  function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+  }
+
+  function showMsg(text, isErr=false) {
+    document.getElementById('msg').innerHTML = `<div class="${isErr ? 'msg-error' : 'msg-success'}">${text}</div>`;
+  }
+
+  // Demo Fetch Users (HIỂN)
+  async function fetchUsers() {
+    try {
+      let res = await fetch(`${API}/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if(res.status === 403) return showMsg('Bạn không phải Admin để xem danh sách users!', true);
+      let users = await res.json();
+      
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = '';
+      users.forEach(u => {
+        tbody.innerHTML += `<tr>
+          <td>${u.username}</td>
+          <td>${u.email}</td>
+          <td><span class="badge b-auth">${u.role ? u.role.name : 'N/A'}</span></td>
+          <td>${u.status ? 'Active' : 'Locked'}</td>
+        </tr>`;
+      });
+      document.getElementById('users-table').style.display = 'table';
+      showMsg('Tải users thành công!');
+    } catch(e) { showMsg('Lỗi gọi API', true); }
+  }
+
+  // Demo Fetch Projects (HƯNG)
+  async function fetchProjects() {
+    try {
+      let res = await fetch(`${API}/projects?status=active`, { headers: { 'Authorization': `Bearer ${token}` } });
+      let projects = await res.json();
+      let html = '<ul>';
+      projects.forEach(p => { html += `<li><strong>${p.name}</strong> - ${p.status}</li>`; });
+      html += '</ul>';
+      document.getElementById('projects-list').innerHTML = html || '<i>(Chưa có project active nào)</i>';
+    } catch(e) { console.error(e); }
+  }
+
+  // Demo Fetch Tasks (ANH)
+  async function fetchTasks() {
+    try {
+      let res = await fetch(`${API}/tasks`, { headers: { 'Authorization': `Bearer ${token}` } });
+      let tasks = await res.json();
+      let html = '';
+      tasks.forEach(t => { 
+        html += `<div style="padding: 10px; border-bottom: 1px solid #ccc;">
+          <h4>${t.title} <span class="badge ${t.status}">${t.status}</span></h4>
+        </div>`; 
+      });
+      document.getElementById('tasks-list').innerHTML = html || '<i>(Chưa có task nào)</i>';
+    } catch(e) { console.error(e); }
+  }
+</script>
+</body>
+</html>
