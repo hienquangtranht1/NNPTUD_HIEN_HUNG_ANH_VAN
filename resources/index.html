@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập - QLTASK</title>
+  <link rel="stylesheet" href="stylesheets/style.css">
+  <style>
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #2c3e50; }
+    .login-box { background: white; padding: 40px; border-radius: 10px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .login-box h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+    .login-box button { width: 100%; padding: 12px; font-size: 1em; }
+    .login-box p { text-align: center; margin-top: 15px; font-size: 0.9em; }
+    .login-box a { color: #3498db; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="login-box">
+  <h2>🗂️ QLTASK</h2>
+  <div id="msg"></div>
+  <input type="text" id="username" placeholder="Tên đăng nhập" />
+  <input type="password" id="password" placeholder="Mật khẩu" />
+  <button onclick="login()">Đăng nhập</button>
+  <p>Chưa có tài khoản? <a href="register.html">Đăng ký</a></p>
+</div>
+<script>
+  const API = 'http://localhost:3000/api/v1';
+
+  // Nếu đã đăng nhập, chuyển về dashboard
+  if (localStorage.getItem('token')) window.location.href = 'dashboard.html';
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const msg = document.getElementById('msg');
+    if (!username || !password) { msg.innerHTML = '<div class="msg-error">Vui lòng nhập đầy đủ</div>'; return; }
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        window.location.href = 'dashboard.html';
+      } else {
+        msg.innerHTML = `<div class="msg-error">${data.message || 'Đăng nhập thất bại'}</div>`;
+      }
+    } catch (e) {
+      msg.innerHTML = '<div class="msg-error">Lỗi kết nối server</div>';
+    }
+  }
+</script>
+</body>
+</html>

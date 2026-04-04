@@ -1,0 +1,50 @@
+/* public/stylesheets/style.css — FE Quản lý Công việc */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; }
+.navbar {
+  background: #2c3e50; color: white; padding: 15px 30px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.navbar h2 { font-size: 1.2em; }
+.navbar a { color: #ecf0f1; text-decoration: none; margin-left: 20px; font-size: 0.95em; }
+.navbar a:hover { color: #3498db; }
+.container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+.card {
+  background: white; border-radius: 8px; padding: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;
+}
+.card h3 { color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+input, select, textarea {
+  width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 0.95em; margin-bottom: 12px;
+}
+button {
+  padding: 10px 22px; background: #3498db; color: white;
+  border: none; border-radius: 6px; cursor: pointer; font-size: 0.95em;
+}
+button:hover { background: #2980b9; }
+button.danger { background: #e74c3c; }
+button.danger:hover { background: #c0392b; }
+button.success { background: #27ae60; }
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 0.8em; font-weight: bold; color: white;
+}
+.badge.todo { background: #95a5a6; }
+.badge.in-progress { background: #e67e22; }
+.badge.done { background: #27ae60; }
+.badge.cancelled { background: #e74c3c; }
+table { width: 100%; border-collapse: collapse; }
+table th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+table tr:hover td { background: #f9f9f9; }
+.msg-success { background: #d4edda; color: #155724; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; }
+.msg-error { background: #f8d7da; color: #721c24; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+a.btn { display: inline-block; padding: 8px 18px; background: #3498db; color: white; border-radius: 6px; text-decoration: none; }
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .navbar { flex-direction: column; gap: 10px; }
+}
