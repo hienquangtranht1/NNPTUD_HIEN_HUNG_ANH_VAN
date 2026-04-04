@@ -6,7 +6,6 @@ let { CreateUserValidator, validationResult } = require('../utils/validatorHandl
 let userModel = require('../schemas/users');
 let userController = require('../controllers/users');
 let { CheckLogin, CheckRole } = require('../utils/authHandler');
-let upload = require('../utils/uploadHandler');
 
 // GET /api/v1/users — Danh sách (chỉ ADMIN, MANAGER)
 router.get('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, res, next) {
@@ -26,23 +25,15 @@ router.get('/:id', CheckLogin, CheckRole('ADMIN'), async function (req, res, nex
 // POST /api/v1/users
 router.post('/', CreateUserValidator, validationResult, async function (req, res, next) {
   try {
-    let newItem = await userController.CreateAnUser(req.body.username, req.body.password, req.body.email, req.body.role, null, req.body.fullName);
+    let newItem = await userController.CreateAnUser(req.body.username, req.body.password, req.body.email, req.body.role);
     res.send(newItem);
   } catch (err) { res.status(400).send({ message: err.message }); }
 });
 
-// PUT /api/v1/users/:id — Cập nhật (ADMIN)
-router.put('/:id', CheckLogin, CheckRole('ADMIN'), upload.single('image'), async function (req, res, next) {
+// PUT /api/v1/users/:id
+router.put('/:id', CheckLogin, async function (req, res, next) {
   try {
-    let body = req.body;
-    // Nếu req.body có status = 'locked' -> khóa vĩnh viễn (gán 10 năm sau)
-    if (body.status === 'locked') {
-        body.lockTime = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000); 
-    } else if (body.status === 'active') {
-        body.lockTime = null;
-    }
-
-    let updated = await userModel.findByIdAndUpdate(req.params.id, body, { new: true }).populate('role');
+    let updated = await userModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.status(404).send({ message: 'Không tìm thấy user' });
     res.send(updated);
   } catch (err) { res.status(400).send({ message: err.message }); }
