@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký - QLTASK</title>
+  <link rel="stylesheet" href="stylesheets/style.css">
+  <style>
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #2c3e50; }
+    .login-box { background: white; padding: 40px; border-radius: 10px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .login-box h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+    .login-box button { width: 100%; padding: 12px; font-size: 1em; }
+    .login-box p { text-align: center; margin-top: 15px; font-size: 0.9em; }
+    .login-box a { color: #3498db; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="login-box">
+  <h2>Tạo tài khoản mới</h2>
+  <div id="msg"></div>
+  <input type="text" id="username" placeholder="Tên đăng nhập" />
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Mật khẩu" />
+  <select id="role">
+    <option value="">Chọn Role ID (Mẫu chờ cập nhật)</option>
+  </select>
+  <button onclick="register()">Đăng ký</button>
+  <p>Đã có tài khoản? <a href="index.html">Đăng nhập</a></p>
+</div>
+<script>
+  const API = 'http://localhost:3000/api/v1';
+
+  async function loadRoles() {
+    try {
+      const res = await fetch(`${API}/roles`);
+      const roles = await res.json();
+      const roleSelect = document.getElementById('role');
+      roleSelect.innerHTML = '<option value="">-- Chọn Role --</option>';
+      roles.forEach(r => {
+        roleSelect.innerHTML += `<option value="${r._id}">${r.name}</option>`;
+      });
+    } catch(e) {
+      console.log('Chưa load được roles');
+    }
+  }
+  loadRoles();
+
+  async function register() {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const roleId = document.getElementById('role').value;
+    const msg = document.getElementById('msg');
+    
+    if (!username || !email || !password || !roleId) { 
+      msg.innerHTML = '<div class="msg-error">Vui lòng nhập đầy đủ</div>'; 
+      return; 
+    }
+    
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, role: roleId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msg.innerHTML = '<div class="msg-success">Đăng ký thành công! Đang chuyển hướng...</div>';
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      } else {
+        msg.innerHTML = `<div class="msg-error">${data.message || (data.errors ? JSON.stringify(data.errors) : 'Đăng ký thất bại')}</div>`;
+      }
+    } catch (e) {
+      msg.innerHTML = '<div class="msg-error">Lỗi kết nối server</div>';
+    }
+  }
+</script>
+</body>
+</html>
