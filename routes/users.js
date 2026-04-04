@@ -41,7 +41,7 @@ router.put('/:id', CheckLogin, async function (req, res, next) {
   if (userRole !== 'ADMIN' && userRole !== 'MANAGER' && req.user._id.toString() !== req.params.id) {
     return res.status(403).send({ message: 'Không đủ quyền. Chỉ Quản lý hoặc chủ tài khoản mới được sửa' });
   }
-  
+
   // Chống lỗi bảo mật thăng cấp đặc quyền (Mass Assignment)
   let updateData = { ...req.body };
   if (userRole !== 'ADMIN') {

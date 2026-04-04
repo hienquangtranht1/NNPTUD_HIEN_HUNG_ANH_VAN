@@ -19,10 +19,10 @@ router.get('/:id', async function (req, res, next) {
   try {
     let department = await departmentModel.findOne({ _id: req.params.id, isDeleted: false });
     if (!department) return res.status(404).send({ message: 'Không tìm thấy phòng ban' });
-    
+
     let userModel = require('../schemas/users');
     let users = await userModel.find({ department: department._id, isDeleted: false }).select('fullName username email avatarUrl role');
-    
+
     let result = department.toObject();
     result.users = users;
 

@@ -1,8 +1,20 @@
-﻿// routes/taskHistories.js — ANH phụ trách
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const taskHistoryModel = require('../schemas/taskHistories');
+const { CheckLogin } = require('../utils/authHandler');
 
-// TODO: ANH viết CRUD cho taskHistories tại đây
-// Tham khảo cấu trúc routes/users.js de viết theo
+// GET /api/v1/taskHistories?taskId=xxx
+router.get('/', CheckLogin, async (req, res) => {
+  try {
+    const { taskId } = req.query;
+    if (!taskId) return res.status(400).json({ message: 'Tiền tố taskId là bắt buộc' });
+    
+    const histories = await taskHistoryModel.find({ taskId })
+      .populate('changedBy', 'fullName username')
+      .sort({ changedAt: -1 });
+      
+    res.json({ data: histories });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
 
 module.exports = router;
