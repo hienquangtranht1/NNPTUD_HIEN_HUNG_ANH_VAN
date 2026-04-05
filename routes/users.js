@@ -57,6 +57,7 @@ router.put('/:id', CheckLogin, async function (req, res, next) {
   let updateData = { ...req.body };
   if (userRole !== 'ADMIN') {
     delete updateData.role; // Chỉ ADMIN mới đổi được chức vụ
+    delete updateData.department; // Chỉ ADMIN mới đổi được phòng ban
     delete updateData.isDeleted; // Hạn chế tự sửa status khoá tài khoản
   }
 
