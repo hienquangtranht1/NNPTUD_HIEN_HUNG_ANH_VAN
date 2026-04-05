@@ -1,7 +1,10 @@
 let jwt = require('jsonwebtoken');
 let userController = require('../controllers/users');
+let fs = require('fs');
+let path = require('path');
 
-const SECRET_KEY = 'secretKey_QLTASK';
+// Đọc khoá Public Key phục vụ Verify (RS256) nằm ở thư mục root
+const publicKey = fs.readFileSync(path.join(__dirname, '../public.pem'), 'utf8');
 
 // CheckLogin: xác thực JWT Token — đặt trước route cần bảo vệ
 let CheckLogin = async function (req, res, next) {
@@ -14,7 +17,7 @@ let CheckLogin = async function (req, res, next) {
     if (!token) token = req.cookies['LOGIN_QLTASK'];
     if (!token) return res.status(401).send({ message: 'Chưa đăng nhập. Vui lòng cung cấp token.' });
 
-    let decoded = jwt.verify(token, SECRET_KEY);
+    let decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
     let user = await userController.GetUserById(decoded.id);
     if (!user) return res.status(401).send({ message: 'Tài khoản không tồn tại.' });
 

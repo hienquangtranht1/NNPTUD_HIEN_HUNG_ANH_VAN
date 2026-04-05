@@ -8,14 +8,19 @@ let jwt = require('jsonwebtoken');
 let bcrypt = require('bcrypt');
 let crypto = require('crypto');
 let { sendMail } = require('../utils/mailHandler');
+let fs = require('fs');
+let path = require('path');
 
-const SECRET_KEY = 'secretKey_QLTASK';
+// RS256: Dùng Private Key để Sign Token (nằm ở thư mục root)
+const privateKey = fs.readFileSync(path.join(__dirname, '../private.pem'), 'utf8');
 
 // POST /api/v1/auth/register
 router.post('/register', RegisterValidator, validationResult, async function (req, res, next) {
   try {
+    // Chặn người dùng tự gán quyền và phòng ban khi đăng ký
     let newItem = await userController.CreateAnUser(
-      req.body.username, req.body.password, req.body.email, req.body.role
+      req.body.username, req.body.password, req.body.email, 
+      null, null, req.body.fullName, null, null
     );
     res.send(newItem);
   } catch (err) {
@@ -34,7 +39,8 @@ router.post('/login', async function (req, res, next) {
     result = await userController.CompareLogin(result, password);
     if (!result) return res.status(403).send({ message: 'Sai thông tin đăng nhập' });
 
-    let token = jwt.sign({ id: result._id }, SECRET_KEY, { expiresIn: '1d' });
+    // Cấp Token RS256
+    let token = jwt.sign({ id: result._id }, privateKey, { algorithm: 'RS256', expiresIn: '1d' });
     res.cookie('LOGIN_QLTASK', token, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
     res.send({ token });
   } catch (err) {
