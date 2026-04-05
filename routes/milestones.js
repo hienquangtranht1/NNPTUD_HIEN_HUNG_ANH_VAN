@@ -8,13 +8,23 @@ const upload = require('../utils/uploadHandler');
 // GET all
 router.get('/', CheckLogin, async (req, res) => {
   try {
-    const { status, project } = req.query;
+    const { status, project, departmentId } = req.query;
     let query = { isDeleted: false };
     if (status) query.status = status;
     if (project) query.project = project;
 
+    const role = req.user.role?.name;
+    // Nếu là MANAGER hoặc lọc theo phòng ban: tìm các project thuộc phòng đó
+    if (role === 'MANAGER' || departmentId) {
+      const deptId = role === 'MANAGER' ? req.user.department : departmentId;
+      if (!deptId) return res.json([]);
+      const deptProjects = await projectModel.find({ department: deptId, isDeleted: false }).select('_id');
+      const projectIds = deptProjects.map(p => p._id);
+      query.project = query.project ? query.project : { $in: projectIds };
+    }
+
     const milestones = await milestoneModel.find(query)
-      .populate('project', 'name')
+      .populate('project', 'name department')
       .sort({ dueDate: 1 });
     res.json(milestones);
   } catch (err) { res.status(500).json({ message: err.message }); }

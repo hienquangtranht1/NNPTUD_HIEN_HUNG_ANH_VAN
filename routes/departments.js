@@ -4,25 +4,35 @@ var router = express.Router();
 let departmentModel = require('../schemas/departments');
 let { CheckLogin, CheckRole } = require('../utils/authHandler');
 
-// GET /api/v1/departments
-router.get('/', async function (req, res, next) {
+// GET /api/v1/departments — Chỉ dành cho ADMIN và MANAGER
+router.get('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, res, next) {
   let nameQ = req.query.name ? req.query.name : '';
-  let data = await departmentModel.find({
-    isDeleted: false,
-    name: new RegExp(nameQ, 'i')
-  });
+  let query = { isDeleted: false, name: new RegExp(nameQ, 'i') };
+
+  // Nếu là MANAGER, chỉ xem được phòng của mình
+  if (req.user.role.name === 'MANAGER') {
+    if (!req.user.department) return res.send([]); // Chưa gán phòng
+    query._id = req.user.department;
+  }
+
+  let data = await departmentModel.find(query);
   res.send(data);
 });
 
-// GET /api/v1/departments/:id — Xem chi tiết phòng và danh sách nhân sự
-router.get('/:id', async function (req, res, next) {
+// GET /api/v1/departments/:id — Xem chi tiết phòng và danh sách nhân sự (Dành cho ADMIN, MANAGER)
+router.get('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, res, next) {
   try {
+    // Nếu là MANAGER, kiểm tra xem có đúng phòng mình không
+    if (req.user.role.name === 'MANAGER' && req.user.department?.toString() !== req.params.id) {
+      return res.status(403).send({ message: 'Bạn không có quyền truy cập phòng ban khác' });
+    }
+
     let department = await departmentModel.findOne({ _id: req.params.id, isDeleted: false });
     if (!department) return res.status(404).send({ message: 'Không tìm thấy phòng ban' });
-    
+
     let userModel = require('../schemas/users');
     let users = await userModel.find({ department: department._id, isDeleted: false }).select('fullName username email avatarUrl role');
-    
+
     let result = department.toObject();
     result.users = users;
 

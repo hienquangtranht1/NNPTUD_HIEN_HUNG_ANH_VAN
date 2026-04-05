@@ -18,6 +18,7 @@ const projectSchema = new mongoose.Schema({
   },
   manager: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' }, // Phòng ban phụ trách
   isDeleted: { type: Boolean, default: false }
 }, { timestamps: true });
 

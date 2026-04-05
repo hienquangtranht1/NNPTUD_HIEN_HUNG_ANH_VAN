@@ -3,30 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng ký - QLTASK</title>
-  <link rel="stylesheet" href="stylesheets/style.css">
+  <title>Đăng ký — QLTASK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
   <style>
-    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #2c3e50; }
-    .login-box { background: white; padding: 40px; border-radius: 10px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .login-box h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
-    .login-box button { width: 100%; padding: 12px; font-size: 1em; }
-    .login-box p { text-align: center; margin-top: 15px; font-size: 0.9em; }
-    .login-box a { color: #3498db; text-decoration: none; }
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --fg: #f8fafc;
+      --fg-muted: #94a3b8;
+      --border: #334155;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+      background: var(--bg); 
+      color: var(--fg);
+      font-family: 'Inter', sans-serif;
+      padding: 40px 0;
+    }
+    .register-card { 
+      background: var(--card-bg); 
+      padding: 40px; 
+      border-radius: 24px; 
+      width: 480px; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+    }
+    .brand { 
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800; 
+      font-size: 1.75rem; 
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h2 { font-size: 1.25rem; font-weight: 600; text-align: center; margin-bottom: 32px; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { margin-bottom: 20px; }
+    .full-width { grid-column: span 2; }
+    
+    label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.025em; }
+    
+    input, select { 
+      width: 100%; 
+      padding: 12px 16px; 
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      color: var(--fg);
+      font-size: 0.9375rem;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    
+    button { 
+      width: 100%; 
+      padding: 14px; 
+      background: var(--primary); 
+      color: #fff; 
+      border: none; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      font-size: 1rem;
+      cursor: pointer; 
+      transition: all 0.2s;
+      margin-top: 12px;
+    }
+    button:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
+    
+    .footer { text-align: center; margin-top: 24px; font-size: 0.875rem; color: var(--fg-muted); }
+    .footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .footer a:hover { text-decoration: underline; }
+
+    .msg { padding: 12px; border-radius: 10px; font-size: 0.875rem; margin-bottom: 20px; text-align: center; border: 1px solid transparent; }
+    .msg-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+    .msg-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
   </style>
 </head>
 <body>
-<div class="login-box">
+<div class="register-card">
+  <div class="brand">QLTASK</div>
   <h2>Tạo tài khoản mới</h2>
+  
   <div id="msg"></div>
-  <input type="text" id="username" placeholder="Tên đăng nhập" />
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Mật khẩu" />
-  <select id="role">
-    <option value="">Chọn Role ID (Mẫu chờ cập nhật)</option>
-  </select>
-  <button onclick="register()">Đăng ký</button>
-  <p>Đã có tài khoản? <a href="index.html">Đăng nhập</a></p>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Tên đăng nhập</label>
+      <input type="text" id="username" placeholder="Ví dụ: nva" />
+    </div>
+    
+    <div class="form-group">
+      <label>Họ và tên</label>
+      <input type="text" id="fullName" placeholder="Nguyễn Văn A" />
+    </div>
+    
+    <div class="form-group full-width">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="email@example.com" />
+    </div>
+    
+    <div class="form-group">
+      <label>Mật khẩu</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+    
+    <div class="form-group">
+      <label>Vai trò</label>
+      <select id="role">
+        <option value="">Đang tải vai trò...</option>
+      </select>
+    </div>
+  </div>
+  
+  <button onclick="register()">Đăng ký tài khoản</button>
+  
+  <div class="footer">
+    Đã có tài khoản? <a href="index.html">Đăng nhập ngay</a>
+  </div>
 </div>
+
 <script>
   const API = 'http://localhost:3000/api/v1';
 
@@ -34,44 +139,42 @@
     try {
       const res = await fetch(`${API}/roles`);
       const roles = await res.json();
-      const roleSelect = document.getElementById('role');
-      roleSelect.innerHTML = '<option value="">-- Chọn Role --</option>';
-      roles.forEach(r => {
-        roleSelect.innerHTML += `<option value="${r._id}">${r.name}</option>`;
-      });
-    } catch(e) {
-      console.log('Chưa load được roles');
+      const select = document.getElementById('role');
+      select.innerHTML = roles.map(r => `<option value="${r._id}">${r.name}</option>`).join('');
+    } catch (e) {
+      document.getElementById('role').innerHTML = '<option value="">Lỗi tải vai trò</option>';
     }
   }
   loadRoles();
 
   async function register() {
     const username = document.getElementById('username').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const roleId = document.getElementById('role').value;
     const msg = document.getElementById('msg');
-    
-    if (!username || !email || !password || !roleId) { 
-      msg.innerHTML = '<div class="msg-error">Vui lòng nhập đầy đủ</div>'; 
-      return; 
+
+    if (!username || !password || !email || !roleId) {
+      msg.innerHTML = '<div class="msg msg-error">Vui lòng nhập đầy đủ thông tin</div>';
+      return;
     }
-    
+
     try {
       const res = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, role: roleId })
+        body: JSON.stringify({ username, password, email, role: roleId, fullName })
       });
       const data = await res.json();
       if (res.ok) {
-        msg.innerHTML = '<div class="msg-success">Đăng ký thành công! Đang chuyển hướng...</div>';
+        msg.innerHTML = '<div class="msg msg-success">Đăng ký thành công! Đang chuyển hướng...</div>';
         setTimeout(() => window.location.href = 'index.html', 1500);
       } else {
-        msg.innerHTML = `<div class="msg-error">${data.message || (data.errors ? JSON.stringify(data.errors) : 'Đăng ký thất bại')}</div>`;
+        msg.innerHTML = `<div class="msg msg-error">${data.message || 'Đăng ký thất bại'}</div>`;
       }
     } catch (e) {
-      msg.innerHTML = '<div class="msg-error">Lỗi kết nối server</div>';
+      msg.innerHTML = '<div class="msg msg-error">Lỗi kết nối server</div>';
     }
   }
 </script>

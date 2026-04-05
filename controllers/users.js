@@ -2,8 +2,13 @@ let userModel = require('../schemas/users');
 let bcrypt = require('bcrypt');
 
 module.exports = {
-  CreateAnUser: async function (username, password, email, role, session, fullName, avatarUrl) {
-    let newUser = new userModel({ username, password, email, role, fullName: fullName || '', avatarUrl: avatarUrl || '' });
+  CreateAnUser: async function (username, password, email, role, session, fullName, avatarUrl, department) {
+    let newUser = new userModel({ 
+      username, password, email, role, 
+      fullName: fullName || '', 
+      avatarUrl: avatarUrl || '', 
+      department: department || null 
+    });
     if (session) await newUser.save({ session });
     else await newUser.save();
     return newUser;

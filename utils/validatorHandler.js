@@ -8,6 +8,12 @@ let RegisterValidator = [
   body('role').notEmpty().withMessage('Role ID bắt buộc'),
 ];
 
+let CreateTaskValidator = [
+  body('title').notEmpty().withMessage('Tiêu đề công việc bắt buộc'),
+  body('projectId').notEmpty().withMessage('Dự án (projectId) bắt buộc'),
+  body('status').optional().isIn(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).withMessage('Trạng thái không hợp lệ'),
+];
+
 let CreateUserValidator = [
   body('fullName').notEmpty().withMessage('Họ và tên bắt buộc'),
   body('username').notEmpty().withMessage('Username bắt buộc'),
@@ -31,4 +37,10 @@ let validationResult = function (req, res, next) {
   next();
 };
 
-module.exports = { RegisterValidator, CreateUserValidator, ChangPasswordValidator, validationResult };
+module.exports = { 
+  RegisterValidator, 
+  CreateUserValidator, 
+  ChangPasswordValidator, 
+  CreateTaskValidator,
+  validationResult 
+};

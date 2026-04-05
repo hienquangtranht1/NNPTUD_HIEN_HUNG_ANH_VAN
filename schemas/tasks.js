@@ -6,8 +6,9 @@ const taskSchema = new mongoose.Schema({
   thumbnail: { type: String }, // Ảnh đính kèm task
   project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-  assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Người thực hiện
-  reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Người tạo
+  assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Người nhận việc
+  reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Người giao việc
+  tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }], // Danh sách nhãn gán cho task
   priority: { 
     type: String, 
     enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
