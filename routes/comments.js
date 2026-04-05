@@ -2,15 +2,17 @@
 var express = require('express');
 var router = express.Router();
 let Comment = require('../schemas/comments');
+let { CheckLogin } = require('../utils/authHandler');
 
 // GET /api/v1/comments?taskId=xxx — Lấy tất cả bình luận của 1 task
-router.get('/', async function (req, res) {
+router.get('/', CheckLogin, async function (req, res) {
   try {
-    let filter = { isDeleted: false };
-    if (req.query.taskId) filter.taskId = req.query.taskId;
+    let filter = {};
+    if (req.query.taskId) filter.task = req.query.taskId;
+    
     let comments = await Comment.find(filter)
-      .populate('userId', 'username fullName')
-      .populate('taskId', 'title')
+      .populate('user', 'username fullName')
+      .populate('task', 'title')
       .sort({ createdAt: 1 });
     res.send(comments);
   } catch (error) {
@@ -18,59 +20,35 @@ router.get('/', async function (req, res) {
   }
 });
 
-// GET /api/v1/comments/:id — Xem chi tiết 1 bình luận
-router.get('/:id', async function (req, res) {
-  try {
-    let comment = await Comment.findOne({ _id: req.params.id, isDeleted: false })
-      .populate('userId', 'username fullName')
-      .populate('taskId', 'title');
-    if (!comment) return res.status(404).send({ message: 'Không tìm thấy bình luận' });
-    res.send(comment);
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
-
 // POST /api/v1/comments — Viết bình luận mới
-router.post('/', async function (req, res) {
+router.post('/', CheckLogin, async function (req, res) {
   try {
-    let { content, taskId, userId } = req.body;
-    if (!content || !taskId || !userId) {
-      return res.status(400).send({ message: 'Thiếu content, taskId hoặc userId' });
+    let { content, task } = req.body;
+    if (!content || !task) {
+      return res.status(400).send({ message: 'Nội dung và taskId là bắt buộc' });
     }
-    let comment = new Comment({ content, taskId, userId });
+    let comment = new Comment({ 
+      content, 
+      task, 
+      user: req.user._id // Lấy user từ token đăng nhập
+    });
     await comment.save();
-    res.send(comment);
+    
+    // Trả về cả thông tin user để hiển thị ngay
+    let populated = await Comment.findById(comment._id).populate('user', 'username fullName');
+    res.send(populated);
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
 });
 
-// PUT /api/v1/comments/:id — Chỉnh sửa nội dung bình luận
-router.put('/:id', async function (req, res) {
+// DELETE /api/v1/comments/:id — Chỉ cho phép người tạo xóa
+router.delete('/:id', CheckLogin, async function (req, res) {
   try {
-    let comment = await Comment.findByIdAndUpdate(
-      req.params.id,
-      { content: req.body.content },
-      { new: true }
-    );
-    if (!comment) return res.status(404).send({ message: 'Không tìm thấy bình luận' });
-    res.send(comment);
-  } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
-});
-
-// DELETE /api/v1/comments/:id — Xóa mềm bình luận
-router.delete('/:id', async function (req, res) {
-  try {
-    let comment = await Comment.findByIdAndUpdate(
-      req.params.id,
-      { isDeleted: true },
-      { new: true }
-    );
-    if (!comment) return res.status(404).send({ message: 'Không tìm thấy bình luận' });
-    res.send({ message: 'Đã xóa bình luận', comment });
+    let comment = await Comment.findOne({ _id: req.params.id, user: req.user._id });
+    if (!comment) return res.status(403).send({ message: 'Bạn không có quyền xóa bình luận này' });
+    await comment.deleteOne();
+    res.send({ message: 'Đã xóa bình luận' });
   } catch (error) {
     res.status(500).send({ message: error.message });
   }

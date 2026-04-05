@@ -4,14 +4,14 @@ var router = express.Router();
 let roleModel = require('../schemas/roles');
 let { CheckLogin, CheckRole } = require('../utils/authHandler');
 
-// GET /api/v1/roles
-router.get('/', async function (req, res, next) {
+// GET /api/v1/roles — Chỉ ADMIN, MANAGER mới xem được danh sách role
+router.get('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, res, next) {
   let data = await roleModel.find({ isDeleted: false });
   res.send(data);
 });
 
-// POST /api/v1/roles — Tạo vai trò mới (Tạm mở tự do để test khởi tạo Role mồi ban đầu)
-router.post('/', async function (req, res, next) {
+// POST /api/v1/roles — Tạo vai trò mới (Chỉ ADMIN)
+router.post('/', CheckLogin, CheckRole('ADMIN'), async function (req, res, next) {
   try {
     let newItem = new roleModel({ name: req.body.name, description: req.body.description });
     await newItem.save();

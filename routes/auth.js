@@ -18,7 +18,8 @@ const privateKey = fs.readFileSync(path.join(__dirname, '../private.pem'), 'utf8
 router.post('/register', RegisterValidator, validationResult, async function (req, res, next) {
   try {
     let newItem = await userController.CreateAnUser(
-      req.body.username, req.body.password, req.body.email, req.body.role, null, req.body.fullName
+      req.body.username, req.body.password, req.body.email, 
+      req.body.role, null, req.body.fullName, null, req.body.department
     );
     res.send(newItem);
   } catch (err) {

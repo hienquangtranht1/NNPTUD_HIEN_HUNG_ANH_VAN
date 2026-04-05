@@ -7,24 +7,36 @@ const { CreateTaskValidator, validationResult } = require('../utils/validatorHan
 const upload = require('../utils/uploadHandler');
 
 // GET all /api/v1/tasks
-// Supported filters: status, assigneeId, projectId
+// Supported filters: status, assigneeId, projectId, departmentId
 router.get('/', CheckLogin, async (req, res) => {
   try {
-    const { status, assigneeId, projectId, search } = req.query;
+    const { status, assigneeId, projectId, categoryId, search, departmentId } = req.query;
     let query = { isDeleted: false };
-    
+
     if (status) query.status = status.toUpperCase();
     if (assigneeId) query.assignee = assigneeId;
     if (projectId) query.project = projectId;
+    if (categoryId) query.category = categoryId;
     if (search) query.title = { $regex: search, $options: 'i' };
 
+    // MANAGER chỉ xem task của phòng mình
+    const role = req.user.role?.name;
+    if (role === 'MANAGER' || departmentId) {
+      const projectModel = require('../schemas/projects');
+      const deptId = role === 'MANAGER' ? req.user.department : departmentId;
+      if (!deptId) return res.json({ data: [] });
+      const deptProjects = await projectModel.find({ department: deptId, isDeleted: false }).select('_id');
+      const projectIds = deptProjects.map(p => p._id);
+      if (!query.project) query.project = { $in: projectIds };
+    }
+
     const tasks = await taskModel.find(query)
-      .populate('project', 'projectName')
+      .populate('project', 'name department')
       .populate('assignee', 'fullName username')
       .populate('reporter', 'fullName username')
       .populate('tags')
       .sort({ createdAt: -1 });
-      
+
     res.json({ data: tasks });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -37,7 +49,7 @@ router.get('/:id', CheckLogin, async (req, res) => {
       .populate('assignee', 'fullName username')
       .populate('reporter', 'fullName username')
       .populate('tags');
-      
+
     if (!t) return res.status(404).json({ message: 'Công việc không tồn tại' });
     res.json(t);
   } catch (err) { res.status(400).json({ message: 'ID không hợp lệ' }); }
@@ -48,7 +60,7 @@ router.post('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), CreateTaskValidator,
   try {
     let body = req.body;
     if (req.file) body.thumbnail = `/uploads/${req.file.filename}`;
-    
+
     // Map fields from request to schema
     const taskData = {
       title: body.title,
@@ -93,7 +105,7 @@ router.put('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), upload.single('ima
         newStatus: body.status
       });
       await history.save();
-      
+
       if (body.status === 'DONE') updateData.completedAt = new Date();
     }
 
@@ -107,11 +119,11 @@ router.put('/:id/tags', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, r
   try {
     const { tags } = req.body; // Expecting an array of tag IDs
     const t = await taskModel.findByIdAndUpdate(
-      req.params.id, 
-      { tags: tags }, 
+      req.params.id,
+      { tags: tags },
       { new: true }
     ).populate('tags');
-    
+
     if (!t) return res.status(404).json({ message: 'Công việc không tồn tại' });
     res.json(t);
   } catch (err) { res.status(400).json({ message: err.message }); }

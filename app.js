@@ -19,6 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'resources'))); // Phục vụ các file HTML tĩnh trong resources/
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Phục vụ các file đã upload (ảnh, tài liệu...)
 
 // =====================================================
 // MOUNT ROUTES API
@@ -46,7 +47,9 @@ app.use('/api/v1/taskHistories', require('./routes/taskHistories'));
 app.use('/api/v1/comments', require('./routes/comments'));
 app.use('/api/v1/attachments', require('./routes/attachments'));
 app.use('/api/v1/notifications', require('./routes/notifications'));
+app.use('/api/v1/messages', require('./routes/messages'));
 app.use('/api/v1/upload', require('./routes/uploads'));
+
 
 // =====================================================
 // KẾT NỐI MONGODB — Database: QLTASK

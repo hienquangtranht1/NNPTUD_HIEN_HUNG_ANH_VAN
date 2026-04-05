@@ -1,10 +1,9 @@
 let mongoose = require('mongoose');
 
-let commentSchema = new mongoose.Schema({
-  content:   { type: String, required: true },
-  taskId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true },
-  userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  isDeleted: { type: Boolean, default: false }
+let CommentSchema = new mongoose.Schema({
+  content: { type: String, required: true },
+  task: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('comments', commentSchema);
+module.exports = mongoose.model('Comment', CommentSchema);

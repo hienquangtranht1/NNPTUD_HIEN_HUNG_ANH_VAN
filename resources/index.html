@@ -3,37 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập - QLTASK</title>
-  <link rel="stylesheet" href="stylesheets/style.css">
+  <title>Đăng nhập — QLTASK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
   <style>
-    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #2c3e50; }
-    .login-box { background: white; padding: 40px; border-radius: 10px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .login-box h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
-    .login-box button { width: 100%; padding: 12px; font-size: 1em; }
-    .login-box p { text-align: center; margin-top: 15px; font-size: 0.9em; }
-    .login-box a { color: #3498db; text-decoration: none; }
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --fg: #f8fafc;
+      --fg-muted: #94a3b8;
+      --border: #334155;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+      background: var(--bg); 
+      color: var(--fg);
+      font-family: 'Inter', sans-serif;
+    }
+    .login-card { 
+      background: var(--card-bg); 
+      padding: 48px; 
+      border-radius: 20px; 
+      width: 420px; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+    }
+    .brand { 
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800; 
+      font-size: 2rem; 
+      text-align: center;
+      margin-bottom: 32px;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h2 { font-size: 1.25rem; font-weight: 600; text-align: center; margin-bottom: 8px; color: var(--fg); }
+    p.subtitle { text-align: center; color: var(--fg-muted); font-size: 0.875rem; margin-bottom: 32px; }
+    
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.025em; }
+    
+    input { 
+      width: 100%; 
+      padding: 12px 16px; 
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      color: var(--fg);
+      font-size: 0.9375rem;
+      transition: all 0.2s;
+    }
+    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    
+    button { 
+      width: 100%; 
+      padding: 12px; 
+      background: var(--primary); 
+      color: #fff; 
+      border: none; 
+      border-radius: 10px; 
+      font-weight: 600; 
+      font-size: 0.9375rem;
+      cursor: pointer; 
+      transition: all 0.2s;
+      margin-top: 12px;
+    }
+    button:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); }
+    
+    .footer { text-align: center; margin-top: 24px; font-size: 0.875rem; color: var(--fg-muted); }
+    .footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .footer a:hover { text-decoration: underline; }
+
+    .msg { padding: 12px; border-radius: 10px; font-size: 0.875rem; margin-bottom: 20px; text-align: center; }
+    .msg-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
   </style>
 </head>
 <body>
-<div class="login-box">
-  <h2>🗂️ QLTASK</h2>
+<div class="login-card">
+  <div class="brand">QLTASK</div>
+  <h2>Chào mừng trở lại</h2>
+  <p class="subtitle">Vui lòng đăng nhập để tiếp tục</p>
+  
   <div id="msg"></div>
-  <input type="text" id="username" placeholder="Tên đăng nhập" />
-  <input type="password" id="password" placeholder="Mật khẩu" />
+  
+  <div class="form-group">
+    <label>Tên đăng nhập</label>
+    <input type="text" id="username" placeholder="Nhập username của bạn" autocomplete="username" />
+  </div>
+  
+  <div class="form-group">
+    <label>Mật khẩu</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+  </div>
+  
   <button onclick="login()">Đăng nhập</button>
-  <p>Chưa có tài khoản? <a href="register.html">Đăng ký</a></p>
+  
+  <div class="footer">
+    Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a>
+  </div>
 </div>
+
 <script>
   const API = 'http://localhost:3000/api/v1';
-
-  // Nếu đã đăng nhập, chuyển về dashboard
   if (localStorage.getItem('token')) window.location.href = 'dashboard.html';
 
   async function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     const msg = document.getElementById('msg');
-    if (!username || !password) { msg.innerHTML = '<div class="msg-error">Vui lòng nhập đầy đủ</div>'; return; }
+    
+    if (!username || !password) { 
+      msg.innerHTML = '<div class="msg msg-error">Vui lòng nhập đầy đủ thông tin</div>'; 
+      return; 
+    }
+    
     try {
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
@@ -45,10 +135,10 @@
         localStorage.setItem('token', data.token);
         window.location.href = 'dashboard.html';
       } else {
-        msg.innerHTML = `<div class="msg-error">${data.message || 'Đăng nhập thất bại'}</div>`;
+        msg.innerHTML = `<div class="msg msg-error">${data.message || 'Đăng nhập thất bại'}</div>`;
       }
     } catch (e) {
-      msg.innerHTML = '<div class="msg-error">Lỗi kết nối server</div>';
+      msg.innerHTML = '<div class="msg msg-error">Lỗi kết nối server</div>';
     }
   }
 </script>

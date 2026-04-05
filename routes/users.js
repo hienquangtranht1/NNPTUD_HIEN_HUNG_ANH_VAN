@@ -9,7 +9,15 @@ let { CheckLogin, CheckRole } = require('../utils/authHandler');
 
 // GET /api/v1/users — Danh sách (chỉ ADMIN, MANAGER)
 router.get('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, res, next) {
-  let users = await userModel.find({ isDeleted: false }).populate({ path: 'role', select: 'name' });
+  let query = { isDeleted: false };
+  
+  // Nếu là MANAGER, chỉ xem được thành viên trong phòng của mình
+  if (req.user.role.name === 'MANAGER') {
+    if (!req.user.department) return res.send([]); // Chưa gán phòng thì ko thấy ai
+    query.department = req.user.department;
+  }
+
+  let users = await userModel.find(query).populate({ path: 'role', select: 'name' }).populate({ path: 'department', select: 'name' });
   res.send(users);
 });
 
@@ -30,7 +38,10 @@ router.get('/:id', CheckLogin, async function (req, res, next) {
 // POST /api/v1/users (Chỉ ADMIN)
 router.post('/', CheckLogin, CheckRole('ADMIN'), CreateUserValidator, validationResult, async function (req, res, next) {
   try {
-    let newItem = await userController.CreateAnUser(req.body.username, req.body.password, req.body.email, req.body.role, null, req.body.fullName);
+    let newItem = await userController.CreateAnUser(
+      req.body.username, req.body.password, req.body.email, 
+      req.body.role, null, req.body.fullName, null, req.body.department
+    );
     res.send(newItem);
   } catch (err) { res.status(400).send({ message: err.message }); }
 });
