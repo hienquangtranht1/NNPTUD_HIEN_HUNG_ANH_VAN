@@ -65,7 +65,7 @@ router.put('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), upload.single('ima
 });
 
 // DELETE soft
-router.delete('/:id', CheckLogin, CheckRole('ADMIN'), async (req, res) => {
+router.delete('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const m = await milestoneModel.findByIdAndUpdate(req.params.id, { isDeleted: true });
     if (!m) return res.status(404).json({ message: 'Cột mốc không tồn tại' });

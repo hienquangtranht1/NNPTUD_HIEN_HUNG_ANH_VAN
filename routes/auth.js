@@ -17,10 +17,10 @@ const privateKey = fs.readFileSync(path.join(__dirname, '../private.pem'), 'utf8
 // POST /api/v1/auth/register
 router.post('/register', RegisterValidator, validationResult, async function (req, res, next) {
   try {
-    // Chặn người dùng tự gán quyền và phòng ban khi đăng ký
+    // Cho phép người dùng chọn vai trò (role) từ trang đăng ký
     let newItem = await userController.CreateAnUser(
       req.body.username, req.body.password, req.body.email, 
-      null, null, req.body.fullName, null, null
+      req.body.role, null, req.body.fullName, null, null
     );
     res.send(newItem);
   } catch (err) {

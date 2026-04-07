@@ -79,7 +79,7 @@ router.put('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), upload.single('ima
 });
 
 // DELETE soft
-router.delete('/:id', CheckLogin, CheckRole('ADMIN'), async (req, res) => {
+router.delete('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const p = await projectModel.findByIdAndUpdate(req.params.id, { isDeleted: true });
     if (!p) return res.status(404).json({ message: 'Dự án không tồn tại' });

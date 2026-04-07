@@ -55,10 +55,27 @@ router.put('/:id', CheckLogin, async function (req, res, next) {
 
   // Chống lỗi bảo mật thăng cấp đặc quyền (Mass Assignment)
   let updateData = { ...req.body };
+  
+  // Xử lý riêng logic Khóa / Mở tài khoản
+  if (updateData.status) {
+    if (userRole === 'ADMIN') {
+      if (updateData.status === 'locked') {
+        // Khoá tài khoản: set lockTime thời gian ở 100 năm sau
+        updateData.lockTime = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000);
+      } else if (updateData.status === 'active') {
+        // Mở khoá tài khoản
+        updateData.lockTime = null;
+        updateData.loginCount = 0; // reset số lần nhập sai
+      }
+    }
+    delete updateData.status; // schema không có trường này
+  }
+
   if (userRole !== 'ADMIN') {
     delete updateData.role; // Chỉ ADMIN mới đổi được chức vụ
     delete updateData.department; // Chỉ ADMIN mới đổi được phòng ban
-    delete updateData.isDeleted; // Hạn chế tự sửa status khoá tài khoản
+    delete updateData.isDeleted; // Hạn chế tự sửa status khoá
+    delete updateData.lockTime; // Hạn chế tự mở khoá
   }
 
   try {
