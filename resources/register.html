@@ -137,7 +137,7 @@
 
   async function loadRoles() {
     try {
-      const res = await fetch(`${API}/roles`);
+      const res = await fetch(`${API}/roles/public`);
       const roles = await res.json();
       const select = document.getElementById('role');
       select.innerHTML = roles.map(r => `<option value="${r._id}">${r.name}</option>`).join('');

@@ -70,7 +70,8 @@ router.post('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), CreateTaskValidator,
       reporter: req.user._id, // người giao
       project: body.projectId || body.project,
       assignee: body.assigneeId || body.assignee, // người nhận
-      category: body.categoryId || body.category
+      category: body.categoryId || body.category,
+      tags: body.tags || []
     };
 
     const t = new taskModel(taskData);
@@ -130,7 +131,7 @@ router.put('/:id/tags', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, r
 });
 
 // DELETE soft
-router.delete('/:id', CheckLogin, CheckRole('ADMIN'), async (req, res) => {
+router.delete('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const t = await taskModel.findByIdAndUpdate(req.params.id, { isDeleted: true });
     if (!t) return res.status(404).json({ message: 'Công việc không tồn tại' });

@@ -10,6 +10,12 @@ router.get('/', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async function (req, 
   res.send(data);
 });
 
+// GET /api/v1/roles/public — Lấy danh sách role cho trang đăng ký (bỏ qua ADMIN)
+router.get('/public', async function (req, res, next) {
+  let data = await roleModel.find({ isDeleted: false, name: { $ne: 'ADMIN' } });
+  res.send(data);
+});
+
 // POST /api/v1/roles — Tạo vai trò mới (Chỉ ADMIN)
 router.post('/', CheckLogin, CheckRole('ADMIN'), async function (req, res, next) {
   try {

@@ -40,7 +40,7 @@ router.put('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), upload.single('ima
 });
 
 // DELETE soft
-router.delete('/:id', CheckLogin, CheckRole('ADMIN'), async (req, res) => {
+router.delete('/:id', CheckLogin, CheckRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const c = await categoryModel.findByIdAndUpdate(req.params.id, { isDeleted: true });
     if (!c) return res.status(404).json({ message: 'Danh mục không tồn tại' });
