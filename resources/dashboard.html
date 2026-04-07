@@ -385,6 +385,8 @@
       background: var(--card-bg);
       width: 560px;
       max-width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
       border-radius: var(--radius-lg);
       padding: 40px;
       position: relative;
@@ -582,6 +584,7 @@
       <div class="sidebar-item admin-only" onclick="showSection('departments', this)">🏢 Phòng ban</div>
       <div class="sidebar-item admin-only" onclick="showSection('roles', this)">🔑 Vai trò</div>
       <div class="sidebar-item admin-only" onclick="showSection('categories', this)">🏷️ Danh mục</div>
+      <div class="sidebar-item admin-only" onclick="showSection('tags', this)">🔖 Từ khóa</div>
       <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border);">
         <div id="userDisplay" style="font-weight: 700; font-size: 0.875rem; margin-bottom: 4px; color: var(--fg);">User
         </div>
@@ -625,12 +628,15 @@
       <!-- Section: Project Tasks Kanban -->
       <section id="sec-tasks" class="section">
         <!-- ADMIN filter bar -->
-        <div id="task-dept-bar" style="display:none;margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div id="task-dept-bar" style="display:none;margin-bottom:20px;gap:10px;align-items:center;flex-wrap:wrap">
           <label style="font-size:0.8rem;font-weight:600;color:var(--fg-muted)">Lọc theo phòng ban:</label>
           <select id="task-dept-filter" onchange="loadTasks()" style="padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:0.85rem;background:#fff;min-width:180px">
             <option value="">-- Tất cả phòng ban --</option>
           </select>
-          <button class="nav-btn ghost" onclick="openCreate()" style="padding:8px 16px;font-size:0.8rem">+ Tạo công việc</button>
+        </div>
+        <!-- MANAGER create button -->
+        <div id="task-manager-bar" style="display:none;margin-bottom:16px">
+          <button class="nav-btn" onclick="openCreate()" style="padding:8px 20px;font-size:0.85rem">+ Tạo công việc</button>
         </div>
         <div class="kanban-wrapper">
           <div class="kanban">
@@ -657,12 +663,15 @@
       <!-- Section: Projects (Kanban) -->
       <section id="sec-projects" class="section active">
         <!-- ADMIN filter bar -->
-        <div id="proj-dept-bar" style="display:none;margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div id="proj-dept-bar" style="display:none;margin-bottom:20px;gap:10px;align-items:center;flex-wrap:wrap">
           <label style="font-size:0.8rem;font-weight:600;color:var(--fg-muted)">Lọc theo phòng ban:</label>
           <select id="proj-dept-filter" onchange="loadProjects()" style="padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:0.85rem;background:#fff;min-width:180px">
             <option value="">-- Tất cả phòng ban --</option>
           </select>
-          <button class="nav-btn ghost" onclick="openCreate()" style="padding:8px 16px;font-size:0.8rem">+ Tạo dự án</button>
+        </div>
+        <!-- MANAGER create button -->
+        <div id="proj-manager-bar" style="display:none;margin-bottom:16px">
+          <button class="nav-btn" onclick="openCreate()" style="padding:8px 20px;font-size:0.85rem">+ Tạo dự án</button>
         </div>
         <div class="kanban-wrapper">
           <div class="kanban">
@@ -705,12 +714,15 @@
       <!-- Section: Milestones (Kanban) -->
       <section id="sec-milestones" class="section">
         <!-- ADMIN filter bar -->
-        <div id="ms-dept-bar" style="display:none;margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div id="ms-dept-bar" style="display:none;margin-bottom:20px;gap:10px;align-items:center;flex-wrap:wrap">
           <label style="font-size:0.8rem;font-weight:600;color:var(--fg-muted)">Lọc theo phòng ban:</label>
           <select id="ms-dept-filter" onchange="loadMilestones()" style="padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:0.85rem;background:#fff;min-width:180px">
             <option value="">-- Tất cả phòng ban --</option>
           </select>
-          <button class="nav-btn ghost" onclick="openCreate()" style="padding:8px 16px;font-size:0.8rem">+ Tạo cột mốc</button>
+        </div>
+        <!-- MANAGER create button -->
+        <div id="ms-manager-bar" style="display:none;margin-bottom:16px">
+          <button class="nav-btn" onclick="openCreate()" style="padding:8px 20px;font-size:0.85rem">+ Tạo cột mốc</button>
         </div>
         <div class="kanban-wrapper">
           <div class="kanban">
@@ -740,6 +752,12 @@
       <!-- Section: Categories -->
       <section id="sec-categories" class="section">
         <div id="category-list-area"
+          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;"></div>
+      </section>
+
+      <!-- Section: Tags -->
+      <section id="sec-tags" class="section">
+        <div id="tag-list-area"
           style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;"></div>
       </section>
 
@@ -832,6 +850,7 @@
           tasks: '📋 Công việc',
           notifications: '🔔 Thông báo',
           categories: '🏷️ Danh mục',
+          tags: '🔖 Từ khóa',
           departments: '🏢 Phòng ban',
           roles: '🔑 Vai trò'
         }[name];
@@ -842,14 +861,24 @@
       if (name === 'tasks') loadTasks(true);
       if (name === 'notifications') loadNotifications();
       if (name === 'categories') loadCategories();
+      if (name === 'tags') loadTags();
       if (name === 'departments') loadDepartments();
       if (name === 'roles') loadRoles();
 
-      // Show/hide dept filter bars for ADMIN
+      // Show/hide bars based on role
       const isAdmin = currentUser?.role?.name === 'ADMIN';
+      const isManagerRole = ['ADMIN', 'MANAGER'].includes(currentUser?.role?.name);
+
+      // ADMIN gets dept filter bars
       ['proj-dept-bar','task-dept-bar','ms-dept-bar'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = isAdmin ? 'flex' : 'none';
+        const barEl = document.getElementById(id);
+        if (barEl) barEl.style.display = isAdmin ? 'flex' : 'none';
+      });
+
+      // MANAGER (but not ADMIN) gets the simpler create buttons
+      ['proj-manager-bar','task-manager-bar','ms-manager-bar'].forEach(id => {
+        const barEl = document.getElementById(id);
+        if (barEl) barEl.style.display = (!isAdmin && isManagerRole) ? 'block' : 'none';
       });
     }
 
@@ -920,7 +949,7 @@
               ${isManager ? `
                 <div style="margin-top:4px; display:flex; gap:4px">
                   <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;" onclick="event.stopPropagation(); openEdit('project','${p._id}')">✏️</button>
-                  ${isAdminCard ? `<button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete('project','${p._id}')">🗑️</button>` : ''}
+                  <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete('project','${p._id}')">🗑️</button>
                 </div>` : ''}
             </div>`;
           list.appendChild(card);
@@ -981,7 +1010,10 @@
             <div class="meta">🚀 ${t.project?.name || 'N/A'}</div>
             ${t.assignee ? `<div style="font-size:0.72rem;color:var(--fg-muted);margin-top:2px">👤 ${t.assignee.fullName || t.assignee.username}</div>` : ''}
             ${t.dueDate ? `<div style="font-size:0.72rem;color:${new Date(t.dueDate) < new Date() ? '#ef4444' : 'var(--fg-muted)'};margin-top:2px">📅 ${new Date(t.dueDate).toLocaleDateString('vi-VN')}</div>` : ''}
-            ${isManager ? `<div style="margin-top:8px"><button class="nav-btn ghost" style="padding:2px 8px;font-size:0.7rem;" onclick="event.stopPropagation(); openEdit('task','${t._id}')">✏️ Sửa</button></div>` : ''}
+            ${isManager ? `<div style="margin-top:8px; display:flex; gap:4px">
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.7rem;" onclick="event.stopPropagation(); openEdit('task','${t._id}')">✏️ Sửa</button>
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.7rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete('task','${t._id}')">🗑️ Xóa</button>
+            </div>` : ''}
           `;
           list.appendChild(card);
         });
@@ -1273,7 +1305,7 @@
             ${isManager ? `
               <div style="margin-top:8px; display:flex; gap:4px">
                 <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;" onclick="event.stopPropagation(); openEdit('milestone','${m._id}')">✏️</button>
-                ${isAdminCard ? `<button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete('milestone','${m._id}')">🗑️</button>` : ''}
+                <button class="nav-btn ghost" style="padding:2px 6px;font-size:0.65rem;color:#ff4d4f" onclick="event.stopPropagation(); handleDelete('milestone','${m._id}')">🗑️</button>
               </div>` : ''}
           `;
           list.appendChild(card);
@@ -1303,12 +1335,38 @@
           ${isManager ? `
             <div style="margin-top:12px; display:flex; gap:6px">
               <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;" onclick="openEdit('category','${c._id}')">✏️ Sửa</button>
-              ${isAdmin ? '<button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;color:#ff4d4f" onclick="handleDelete(\'category\',\'' + c._id + '\')">🗑️ Xóa</button>' : ''}
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;color:#ff4d4f" onclick="handleDelete('category','${c._id}')">🗑️ Xóa</button>
             </div>
           ` : ''}
         </div>
       `).join('') || '<i>Chưa có danh mục</i>';
       } catch (e) { area.innerHTML = 'Lỗi tải danh mục'; }
+    }
+
+    async function loadTags() {
+      const area = document.getElementById('tag-list-area');
+      area.innerHTML = 'Đang tải...';
+      try {
+        const res = await fetch(`${API}/tags`, { headers: H() });
+        const data = await res.json();
+        const tags = Array.isArray(data) ? data : (data.data || []);
+        const isManager = ['ADMIN', 'MANAGER'].includes(currentUser.role?.name);
+        const isAdmin = currentUser.role?.name === 'ADMIN';
+
+        area.innerHTML = tags.map(t => `
+        <div class="card" style="border-left: 6px solid ${t.color || '#3b82f6'}; display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <div style="font-weight:800;font-size:0.9rem"><span style="display:inline-block;width:12px;height:12px;background:${t.color||'#3b82f6'};border-radius:50%;margin-right:6px"></span>${t.name}</div>
+          </div>
+          ${isManager ? `
+            <div style="display:flex; gap:6px">
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;" onclick="openEdit('tag','${t._id}')">✏️ Sửa</button>
+              <button class="nav-btn ghost" style="padding:2px 8px;font-size:0.65rem;color:#ff4d4f" onclick="handleDelete('tag','${t._id}')">🗑️ Xóa</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('') || '<i>Chưa có từ khóa nào (Tags)</i>';
+      } catch (e) { area.innerHTML = 'Lỗi tải tags'; }
     }
 
     async function loadDepartments() {
@@ -1514,9 +1572,28 @@
       task: (data, extra = {}) => {
         const projs = extra.projs || extra || [];
         const members = extra.members || [];
+        const categories = extra.categories || [];
+        const tags = extra.tags || [];
         return `
         <div class="form-group"><label>Tiêu đề công việc *</label><input id="f_title" value="${data?.title || ''}"></div>
         <div class="form-group"><label>Dự án *</label><select id="f_project">${projs.map(p => `<option value="${p._id}" ${(data?.project?._id || data?.project) === p._id ? 'selected' : ''}>${p.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Danh mục</label>
+          <select id="f_category">
+            <option value="">-- Không phân loại --</option>
+            ${categories.map(c => `<option value="${c._id}" ${(data?.category?._id || data?.category) === c._id ? 'selected' : ''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>Gắn thẻ (Tags)</label>
+          <div style="display:flex; flex-wrap:wrap; gap:8px">
+            ${tags.map(t => {
+              const isChecked = data?.tags?.some(dt => (dt._id || dt) === t._id) ? 'checked' : '';
+              return `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;background:${t.color}15;padding:4px 8px;border-radius:4px;border:1px solid ${t.color}">
+                <input type="checkbox" name="f_tags" value="${t._id}" ${isChecked}>
+                <span style="color:${t.color};font-weight:600">${t.name}</span>
+              </label>`;
+            }).join('') || '<div style="font-size:0.8rem;color:#888">Chưa có tag nào trong hệ thống</div>'}
+          </div>
+        </div>
         <div class="form-group"><label>Người thực hiện</label>
           <select id="f_assignee">
             <option value="">-- Chưa phân công --</option>
@@ -1532,6 +1609,8 @@
         const roles = extra.roles || [];
         const depts = extra.depts || [];
         return `
+          <div class="form-group"><label>Tên đăng nhập *</label><input id="f_username" value="${data?.username || ''}" ${data ? 'disabled' : ''} placeholder="Tên đăng nhập"></div>
+          ${!data ? `<div class="form-group"><label>Mật khẩu *</label><input type="password" id="f_password" placeholder="Mật khẩu khởi tạo"></div>` : ''}
           <div class="form-group"><label>Tên đầy đủ *</label><input id="f_fullName" value="${data?.fullName || ''}"></div>
           <div class="form-group"><label>Email *</label><input id="f_email" value="${data?.email || ''}"></div>
           <div class="form-group"><label>Vai trò</label>
@@ -1555,6 +1634,17 @@
           <input type="color" id="f_color" value="${data?.color || '#000000'}" style="width:100%;height:40px;cursor:pointer">
         </div>`;
       },
+      tag: (data) => {
+        const presets = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+        return `
+        <div class="form-group"><label>Tên thẻ (Tag) *</label><input id="f_name" value="${data?.name || ''}"></div>
+        <div class="form-group"><label>Màu sắc</label>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            ${presets.map(c => `<div onclick="document.getElementById('f_color').value='${c}'" style="width:24px;height:24px;background:${c};cursor:pointer;border-radius:4px;border:1px solid #ddd"></div>`).join('')}
+          </div>
+          <input type="color" id="f_color" value="${data?.color || '#3b82f6'}" style="width:100%;height:40px;cursor:pointer">
+        </div>`;
+      },
       department: (data) => `
       <div class="form-group"><label>Tên phòng ban *</label><input id="f_name" value="${data?.name || ''}"></div>
       <div class="form-group"><label>Mô tả</label><textarea id="f_description" rows="3">${data?.description || ''}</textarea></div>`,
@@ -1576,7 +1666,7 @@
 
       editId = null;
       document.getElementById('modalSubmit').style.display = 'block';
-      document.getElementById('modalTitle').innerText = '➕ Tạo mới ' + { project: 'Dự án', milestone: 'Cột mốc', task: 'Công việc', user: 'Thành viên', department: 'Phòng ban', role: 'Vai trò', category: 'Danh mục' }[type] || type;
+      document.getElementById('modalTitle').innerText = '➕ Tạo mới ' + { project: 'Dự án', milestone: 'Cột mốc', task: 'Công việc', user: 'Thành viên', department: 'Phòng ban', role: 'Vai trò', category: 'Danh mục', tag: 'Từ khóa (Tag)' }[type] || type;
 
       let extra = {};
       if (type === 'project') {
@@ -1601,7 +1691,15 @@
             members = await mr.json();
           }
         } catch (_) {}
-        extra = { projs, members };
+        try {
+          const cr = await fetch(`${API}/categories`, { headers: H() });
+          extra.categories = await cr.json();
+          const tr = await fetch(`${API}/tags`, { headers: H() });
+          const td = await tr.json();
+          extra.tags = td.data || td;
+        } catch (_) { extra.categories = []; extra.tags = []; }
+        extra.projs = projs;
+        extra.members = members;
       } else if (type === 'user') {
         const r1 = await fetch(`${API}/roles`, { headers: H() });
         const roles = await r1.json();
@@ -1645,7 +1743,15 @@
               members = await mr.json();
             }
           } catch (_) {}
-          extra = { projs, members };
+          try {
+            const cr = await fetch(`${API}/categories`, { headers: H() });
+            extra.categories = await cr.json();
+            const tr = await fetch(`${API}/tags`, { headers: H() });
+            const td = await tr.json();
+            extra.tags = td.data || td;
+          } catch (_) { extra.categories = []; extra.tags = []; }
+          extra.projs = projs;
+          extra.members = members;
         } else if (type === 'user') {
           const r1 = await fetch(`${API}/roles`, { headers: H() });
           const roles = await r1.json();
@@ -1687,19 +1793,28 @@
         if (deptVal) payload.department = deptVal;
       } else if (type === 'task') {
         payload.title = document.getElementById('f_title').value;
-        payload.project = document.getElementById('f_project').value;
-        payload.assignee = document.getElementById('f_assignee')?.value || undefined;
+        payload.projectId = document.getElementById('f_project').value;
+        payload.assigneeId = document.getElementById('f_assignee')?.value || undefined;
         payload.priority = document.getElementById('f_priority')?.value || 'MEDIUM';
+        payload.categoryId = document.getElementById('f_category')?.value || undefined;
+        payload.tags = Array.from(document.querySelectorAll('input[name="f_tags"]:checked')).map(c => c.value);
         payload.status = document.getElementById('f_status').value;
         payload.description = document.getElementById('f_desc').value;
         const due = document.getElementById('f_dueDate')?.value;
         if (due) payload.dueDate = due;
       } else if (type === 'user') {
+        const uNode = document.getElementById('f_username');
+        if (uNode && !uNode.disabled) payload.username = uNode.value;
+        const pNode = document.getElementById('f_password');
+        if (pNode) payload.password = pNode.value;
         payload.fullName = document.getElementById('f_fullName').value;
         payload.email = document.getElementById('f_email').value;
         payload.role = document.getElementById('f_role').value;
         payload.department = document.getElementById('f_dept').value;
       } else if (type === 'category') {
+        payload.name = document.getElementById('f_name').value;
+        payload.color = document.getElementById('f_color').value;
+      } else if (type === 'tag') {
         payload.name = document.getElementById('f_name').value;
         payload.color = document.getElementById('f_color').value;
       } else if (type === 'milestone') {
@@ -1774,13 +1889,19 @@
             
             <strong style="display:block; margin-top:20px">📎 FILE ĐÍNH KÈM</strong>
             <div id="attachment-list" style="margin-top:10px; font-size:0.8rem">Đang tải...</div>
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <input type="file" id="f_attach" style="flex:1; border:1px solid #ccc; padding:4px; max-width: 100%" onchange="uploadAttachment('${id}')">
+            </div>
           </div>`;
-          loadComments(id);
-          loadAttachments(id);
         }
 
         html += '</div>';
         body.innerHTML = html;
+
+        if (type === 'task') {
+          loadComments(id);
+          loadAttachments(id);
+        }
       } catch (e) { body.innerHTML = 'Lỗi tải chi tiết'; }
     }
 
@@ -1802,8 +1923,60 @@
       try {
         const res = await fetch(`${API}/attachments?taskId=${taskId}`, { headers: H() });
         const data = await res.json();
-        list.innerHTML = data.map(a => `<div style="margin-bottom:5px">📄 <a href="${a.url}" target="_blank">${a.filename}</a></div>`).join('') || 'Chưa có file';
+        list.innerHTML = data && data.length ? data.map(a => `<div style="margin-bottom:5px">📄 <a href="${a.url}" target="_blank">${a.filename}</a></div>`).join('') : 'Chưa có file';
       } catch (e) { list.innerHTML = '-'; }
+    }
+
+    async function uploadAttachment(taskId) {
+      const fileEl = document.getElementById('f_attach');
+      if (!fileEl || !fileEl.files[0]) return;
+      const fd = new FormData();
+      fd.append('file', fileEl.files[0]);
+
+      const list = document.getElementById('attachment-list');
+      if (list) list.innerHTML = '⏳ Đang tải file lên...';
+
+      try {
+        // Bước 1: Upload file lên server
+        const upRes = await fetch(`${API}/upload/single`, {
+          method: 'POST',
+          headers: H(),   // chỉ Authorization, để browser tự set multipart boundary
+          body: fd
+        });
+        const upData = await upRes.json();
+        console.log('[upload] step1 response:', upRes.status, upData);
+        if (!upRes.ok) {
+          alert('❌ Lỗi upload file: ' + (upData.message || upRes.status));
+          if (list) loadAttachments(taskId);
+          return;
+        }
+
+        // Bước 2: Lưu metadata vào Database
+        const saveRes = await fetch(`${API}/attachments`, {
+          method: 'POST',
+          headers: { ...H(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: upData.filename,
+            url: upData.url,
+            taskId,
+            uploadedBy: currentUser._id
+          })
+        });
+        const saveData = await saveRes.json();
+        console.log('[upload] step2 response:', saveRes.status, saveData);
+        if (!saveRes.ok) {
+          alert('❌ Lưu thông tin file thất bại: ' + (saveData.message || saveRes.status));
+          if (list) loadAttachments(taskId);
+          return;
+        }
+
+        fileEl.value = '';
+        loadAttachments(taskId);
+      } catch (e) {
+        console.error('[upload] fatal error:', e);
+        alert('❌ Lỗi kết nối khi tải file đính kèm: ' + e.message);
+        if (document.getElementById('attachment-list')) loadAttachments(taskId);
+      }
     }
 
     async function addComment(taskId) {
